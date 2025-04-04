@@ -257,6 +257,7 @@
                 </nav>
             </div>
         </header>
+        
         <!-- Swiper-->
         <section class="section swiper-container swiper-slider swiper-classic bg-gray-2" data-loop="true"
             data-autoplay="4000" data-simulate-touch="false" data-slide-effect="fade">
@@ -1417,6 +1418,8 @@
                 </div>
             </div>
         </section>
+
+
         <footer class="section footer-classic footer-classic-dark context-dark">
             <div class="footer-classic-main">
                 <div class="container">

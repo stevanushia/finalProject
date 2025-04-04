@@ -140,7 +140,7 @@
                         <div class="rd-navbar-main-container container">
                             <!-- RD Navbar Brand-->
                             <div class="rd-navbar-brand"><a class="brand" href="./"><img class="brand-logo "
-                                        src="{{ asset('assets/images/logo-soccer-default-95x126.png') }}" alt="" width="95"
+                                        src="{{ asset('assets/images/main-logo.png') }}" alt="" width="95"
                                         height="126" /></a>
                             </div>
                             <!-- RD Navbar List-->
@@ -183,14 +183,14 @@
                                 <li class="rd-nav-item active"><a class="rd-nav-link" href="index.html">Home</a>
                                 </li>
                                 <li class="rd-nav-item"><a class="rd-nav-link"
-                                        href="https://livedemo00.template-help.com/wt_63853_v4/soccer/index.html">Game
+                                        href="#">Game
                                         overview</a>
                                 </li>
                                 <li class="rd-nav-item"><a class="rd-nav-link"
-                                        href="https://livedemo00.template-help.com/wt_63853_v4/soccer/index.html">Typography</a>
+                                        href="#">Typography</a>
                                 </li>
                                 <li class="rd-nav-item"><a class="rd-nav-link"
-                                        href="https://livedemo00.template-help.com/wt_63853_v4/soccer/index.html">Contact
+                                        href="#">Contact
                                         us</a>
                                 </li>
                             </ul>

@@ -21,7 +21,7 @@
                     <article
                         class="unit unit-sm-horizontal unit-middle justify-content-center justify-content-sm-start footer-classic-info">
                         <div class="unit-left"><a class="brand brand-md" href="./"><img class="brand-logo "
-                                    src="{{ asset('assets/images/logo-soccer-default-95x126.png') }}" alt="" width="95"
+                                    src="{{ asset('assets/images/main-logo.png') }}" alt="" width="95"
                                     height="126" /></a>
                         </div>
                         <div class="unit-body">
