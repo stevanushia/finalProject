@@ -177,7 +177,7 @@
                 <!-- Rights-->
                 <p class="rights"><span>Sportland</span><span>&nbsp;&copy;&nbsp;</span><span
                         class="copyright-year"></span><span>.&nbsp;</span><span>Designed by <a
-                            href="https://www.templatemonster.com/products/author/zemez/">Zemez.</a></span></p>
+                            href="https://www.linkedin.com/in/stevanushia">Hiya.</a></span></p>
                 <nav class="nav-minimal">
                     <ul class="nav-minimal-list">
                         <li class="active"><a href="index.html">Home</a></li>

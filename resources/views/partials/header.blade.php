@@ -125,9 +125,9 @@
                                         </article>
                                     </div>
                                 </li>
-                                <li><a class="link link-icon link-icon-left link-classic" href="#"><span
+                                <li><a class="link link-icon link-icon-left link-classic" href="{{ route('login') }}"><span
                                             class="icon fl-bigmug-line-login12"></span><span
-                                            class="link-icon-text">Your Account</span></a>
+                                            class="link-icon-text">Login</span></a>
                                 </li>
                             </ul>
                         </div>
