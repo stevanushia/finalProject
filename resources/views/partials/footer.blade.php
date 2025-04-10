@@ -4,7 +4,7 @@
             <p class="heading-7">Subscribe to our Newsletter</p>
             <!-- RD Mailform-->
             <form class="rd-mailform rd-form rd-inline-form-creative" data-form-output="form-output-global"
-                data-form-type="subscribe" method="post" action="bat/rd-mailform.php">
+                data-form-type="subscribe" method="post" action="{{ asset('assets/bat/rd-mailform.php') }}">
                 <div class="form-wrap">
                     <div class="form-input-wrap">
                         <input class="form-input" id="footer-form-email" type="email" name="email" required>

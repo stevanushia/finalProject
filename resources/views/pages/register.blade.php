@@ -9,10 +9,11 @@
             <div class="col-md-6 col-lg-5">
                 <div class="card shadow-sm rounded-4 p-4">
                     <div class="text-center">
-                        <img src="{{ asset('assets/images/main-logo-dark.png') }}" alt="" width="95" height="126">
+                        <a href="/">
+                            <img src="{{ asset('assets/images/main-logo-dark.png') }}" alt="" width="95" height="126">
+                        </a>
                     </div>
                     <h4 class="text-center mb-4">Register</h4>
-
                     <div class="form-group mb-3">
                         <input type="text" id="register_name" class="form-control" placeholder="Full Name" required>
                     </div>

@@ -12,7 +12,6 @@
                         <a href="/">
                             <img src="{{ asset('assets/images/main-logo-dark.png') }}" alt="" width="95" height="126">
                         </a>
-                        
                     </div>
                     <h4 class="text-center mb-4">Login</h4>
 
@@ -76,22 +75,64 @@
             .then(() => window.location.href = '/')
             .catch(error => alert('Login failed: ' + error.message));
     }
+    document.addEventListener('DOMContentLoaded', function () {
+        window.googleLogin = function () {
+            const csrf = document.querySelector('meta[name="csrf-token"]');
+            const token = csrf ? csrf.getAttribute('content') : null;
 
-    function googleLogin() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithPopup(provider)
-            .then(result => result.user.getIdToken())
-            .then(token => {
-                return fetch('/firebase-login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    },
-                    body: JSON.stringify({ token })
-                }).then(() => location.href = '/');
-            })
-            .catch(error => alert('Login failed: ' + error.message));
-    }
+            if (!token) {
+                alert('CSRF token not found!');
+                return;
+            }
+
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider)
+                .then(result => result.user.getIdToken())
+                .then(firebaseToken => {
+                    return fetch('/firebase-login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ token: firebaseToken })
+                    });
+                })
+                .then(async response => {
+                    const contentType = response.headers.get('content-type');
+                    const data = contentType.includes('application/json')
+                        ? await response.json()
+                        : await response.text();
+
+                    console.log('Response:', data);
+                    window.location.href = '/';
+                })
+                .catch(error => {
+                    console.error('Login failed:', error);
+                    alert('Login failed: ' + error.message);
+                });
+        };
+    });
+
+
+
+    // function googleLogin() {
+    //     const provider = new firebase.auth.GoogleAuthProvider();
+    //     firebase.auth().signInWithPopup(provider)
+    //         .then(result => result.user.getIdToken())
+    //         .then(token => {
+    //             return fetch('/firebase-login', {
+    //                 method: 'POST',
+    //                 headers: {
+    //                     'Content-Type': 'application/json',
+    //                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
+    //                 },
+    //                 body: JSON.stringify({ token })
+    //             })
+    //             // .then(() => location.href = '/');
+    //         })
+    //         .catch(error => alert('Login failed: ' + error.message));
+    // }
 </script>
 @endpush

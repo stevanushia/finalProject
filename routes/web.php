@@ -8,6 +8,10 @@ Route::get('/', function () {
     return view('pages.home');
 });
 
+Route::get('/template', function () {
+    return view('welcome');
+});
+
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
@@ -20,6 +24,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 
 Route::post('/firebase-login', [AuthController::class, 'firebaseLogin']);
+
 
 
 

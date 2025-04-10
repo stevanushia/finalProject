@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Factory;
 
 class AuthController extends Controller
@@ -61,22 +62,59 @@ class AuthController extends Controller
         return redirect('/login');
     }
 
+    // public function firebaseLogin(Request $request)
+    // {
+    //     $factory = (new Factory)->withServiceAccount(config('firebase.credentials'));
+    //     $auth = $factory->createAuth();
+
+    //     $verifiedIdToken = $auth->verifyIdToken($request->token);
+    //     $firebaseUser = $auth->getUser($verifiedIdToken->claims()->get('sub'));
+
+    //     $user = User::firstOrCreate(
+    //         ['email' => $firebaseUser->email],
+    //         ['name' => $firebaseUser->displayName ?? $firebaseUser->email]
+    //     );
+    //     dd($user);
+
+    //     Auth::login($user);
+
+    //     return response()->json(['status' => 'logged_in']);
+    // }
     public function firebaseLogin(Request $request)
-{
-    $factory = (new Factory)->withServiceAccount(config('firebase.credentials'));
-    $auth = $factory->createAuth();
+    {
+        try {
+            Log::info('Firebase Login Request:', $request->all());
 
-    $verifiedIdToken = $auth->verifyIdToken($request->token);
-    $firebaseUser = $auth->getUser($verifiedIdToken->claims()->get('sub'));
+            $factory = (new Factory)->withServiceAccount(base_path('firebase_credentials.json'));
+            $auth = $factory->createAuth();
+    
+            $verifiedIdToken = $auth->verifyIdToken($request->token);
+            $firebaseUser = $auth->getUser($verifiedIdToken->claims()->get('sub'));
+    
+            $user = User::firstOrCreate(
+                ['email' => $firebaseUser->email],
+                ['name' => $firebaseUser->displayName ?? $firebaseUser->email]
+            );
+    
+            Auth::guard('web')->login($user);
+            session(['login_confirm' => 'yes']);
+            Log::info('Session after login:', session()->all());
 
-    $user = User::firstOrCreate(
-        ['email' => $firebaseUser->email],
-        ['name' => $firebaseUser->displayName ?? $firebaseUser->email]
-    );
+            return response()->json(['status' => 'logged_in']);
+        } catch (\Throwable $e) {
+            Log::error('Firebase Login Error:', [
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ]);
+    
+            return response()->json([
+                'error' => true,
+                'message' => 'Server error: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+    
 
-    Auth::login($user);
-
-    return response()->json(['status' => 'logged_in']);
-}
 }
 

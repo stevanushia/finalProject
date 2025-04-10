@@ -46,91 +46,38 @@
                                 </div>
                             </div>
                         </div>
+                        
                         <div class="rd-navbar-panel-item rd-navbar-panel-item-right">
                             <ul class="list-inline list-inline-bordered">
+                                @auth
+                                <li class="dropdown">
+                                    <a class="link link-icon link-icon-left link-classic dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                                        <span class="icon fl-bigmug-line-user144"></span>
+                                        <span class="link-icon-text">{{ Auth::user()->name }}</span>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="{{ route('login') }}">My Profile</a></li>
+                                        <li>
+                                            <form action="{{ route('logout') }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="dropdown-item" style="width: 100%; text-align: left;">
+                                                    Logout
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </li>
+                                @else
                                 <li>
-                                    <!-- Select 2-->
-                                    <select class="select select-inline" data-placeholder="Select an option"
-                                        data-dropdown-class="select-inline-dropdown">
-                                        <option value="en" selected="">en</option>
-                                        <option value="fr">fr</option>
-                                        <option value="es">es</option>
-                                    </select>
+                                    <a class="link link-icon link-icon-left link-classic" href="{{ route('login') }}">
+                                        <span class="icon fl-bigmug-line-login12"></span>
+                                        <span class="link-icon-text">Login</span>
+                                    </a>
                                 </li>
-                                <li>
-                                    <div class="cart-inline-toggled-outer">
-                                        <!-- Link Cart-->
-                                        <button class="link link-cart cart-inline-toggle"
-                                            data-rd-navbar-toggle="#cart-inline"><span
-                                                class="link-cart-icon fl-bigmug-line-shopping202"></span><span
-                                                class="link-cart-counter">2</span></button>
-                                        <!-- Cart Inline-->
-                                        <article class="cart-inline cart-inline-toggled" id="cart-inline">
-                                            <div class="cart-inline-inner">
-                                                <div class="cart-inline-header">
-                                                    <h5 class="cart-inline-title">In cart: 2 products</h5>
-                                                    <p class="cart-inline-subtitle">total price: $750</p>
-                                                </div>
-                                                <div class="cart-inline-main">
-                                                    <!-- Product inline-->
-                                                    <article class="product-inline">
-                                                        <div class="product-inline-aside"><a
-                                                                class="product-inline-figure" href="#"><img
-                                                                    class="product-inline-image"
-                                                                    src="{{ asset('assets/images/product-Nike-Air-Zoom-Pegasus-67x30.png') }}"
-                                                                    alt="" width="67" height="30" /></a></div>
-                                                        <div class="product-inline-main">
-                                                            <p class="heading-7 product-inline-title"><a
-                                                                    href="#">Nike Air Zoom Pegasus</a></p>
-                                                            <ul class="product-inline-meta">
-                                                                <li>
-                                                                    <input class="form-input" type="number"
-                                                                        data-zeros="true" value="2" min="1"
-                                                                        max="100">
-                                                                </li>
-                                                                <li>
-                                                                    <p class="product-inline-price">$500.00</p>
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </article>
-                                                    <!-- Product inline-->
-                                                    <article class="product-inline">
-                                                        <div class="product-inline-aside"><a
-                                                                class="product-inline-figure" href="#"><img
-                                                                    class="product-inline-image"
-                                                                    src="{{ asset('assets/images/product-Nike-Baseball-Hat-55x38.png') }}"
-                                                                    alt="" width="55" height="38" /></a></div>
-                                                        <div class="product-inline-main">
-                                                            <p class="heading-7 product-inline-title"><a
-                                                                    href="#">Nike Baseball Hat</a></p>
-                                                            <ul class="product-inline-meta">
-                                                                <li>
-                                                                    <input class="form-input" type="number"
-                                                                        data-zeros="true" value="1" min="1"
-                                                                        max="100">
-                                                                </li>
-                                                                <li>
-                                                                    <p class="product-inline-price">$250.00</p>
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </article>
-                                                </div>
-                                                <div class="cart-inline-footer"><a
-                                                        class="button button-md button-default-outline" href="#">Go
-                                                        to Cart</a><a class="button button-md button-primary"
-                                                        href="#">Checkout</a></div>
-                                            </div>
-                                        </article>
-                                    </div>
-                                </li>
-                                <li><a class="link link-icon link-icon-left link-classic" href="{{ route('login') }}"><span
-                                            class="icon fl-bigmug-line-login12"></span><span
-                                            class="link-icon-text">Login</span></a>
-                                </li>
+                                @endauth
                             </ul>
                         </div>
+                        
                         <div class="rd-navbar-collapse-toggle rd-navbar-fixed-element-1"
                             data-rd-navbar-toggle=".rd-navbar-collapse"><span></span></div>
                     </div>
