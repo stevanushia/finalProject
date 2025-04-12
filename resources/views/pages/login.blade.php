@@ -115,9 +115,9 @@
 
                 console.log('Response:', data);
                 // ✅ Delay to ensure session is fully stored before redirecting
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 200);
+                // setTimeout(() => {
+                //     window.location.href = '/';
+                // }, 200);
             })
             .catch(error => {
                 console.error('Login failed:', error);
