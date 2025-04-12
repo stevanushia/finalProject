@@ -114,7 +114,7 @@
                         : await response.text();
 
                     console.log('Response:', data);
-                    // window.location.href = '/';
+                    window.location.href = '/';
                 })
                 .catch(error => {
                     console.error('Login failed:', error);
