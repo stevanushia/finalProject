@@ -59,22 +59,30 @@
         const password = document.getElementById('login_password').value;
 
         firebase.auth().signInWithEmailAndPassword(email, password)
-            .then(userCredential => {
-                return userCredential.user.getIdToken();
-            })
+            .then(userCredential => userCredential.user.getIdToken())
             .then(token => {
                 return fetch('/firebase-login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     },
+                    credentials: 'same-origin',
                     body: JSON.stringify({ token })
                 });
             })
-            .then(() => window.location.href = '/')
-            .catch(error => alert('Login failed: ' + error.message));
+            .then(async response => {
+                    const contentType = response.headers.get('content-type');
+                    const data = contentType.includes('application/json')
+                        ? await response.json()
+                        : await response.text();
+
+                    console.log('Response:', data);
+                    window.location.href = '/';
+                })
+            // .then(() => window.location.href = '/');
     }
+
     document.addEventListener('DOMContentLoaded', function () {
         window.googleLogin = function () {
             const csrf = document.querySelector('meta[name="csrf-token"]');
@@ -106,7 +114,7 @@
                         : await response.text();
 
                     console.log('Response:', data);
-                    window.location.href = '/';
+                    // window.location.href = '/';
                 })
                 .catch(error => {
                     console.error('Login failed:', error);
@@ -115,24 +123,5 @@
         };
     });
 
-
-
-    // function googleLogin() {
-    //     const provider = new firebase.auth.GoogleAuthProvider();
-    //     firebase.auth().signInWithPopup(provider)
-    //         .then(result => result.user.getIdToken())
-    //         .then(token => {
-    //             return fetch('/firebase-login', {
-    //                 method: 'POST',
-    //                 headers: {
-    //                     'Content-Type': 'application/json',
-    //                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-    //                 },
-    //                 body: JSON.stringify({ token })
-    //             })
-    //             // .then(() => location.href = '/');
-    //         })
-    //         .catch(error => alert('Login failed: ' + error.message));
-    // }
 </script>
 @endpush
