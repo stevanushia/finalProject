@@ -83,7 +83,7 @@
             // .then(() => window.location.href = '/');
     }
     
-    document.addEventListener('DOMContentLoaded', function () {
+
     window.googleLogin = function () {
         const csrf = document.querySelector('meta[name="csrf-token"]');
         const token = csrf ? csrf.getAttribute('content') : null;
@@ -124,7 +124,7 @@
                 alert('Login failed: ' + error.message);
             });
     };
-});
+
 //
 
 </script>
