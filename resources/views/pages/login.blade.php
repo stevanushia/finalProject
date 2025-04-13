@@ -114,7 +114,7 @@
                     : await response.text();
 
                 console.log('Response:', data);
-                ✅ Delay to ensure session is fully stored before redirecting
+                // ✅ Delay to ensure session is fully stored before redirecting
                 setTimeout(() => {
                     window.location.href = '/';
                 }, 200);
