@@ -26,11 +26,11 @@
                     <div class="form-group mb-4">
                         <input type="password" id="register_confirm" class="form-control" placeholder="Confirm Password" required>
                     </div>
-                    <button onclick="registerWithEmail()" class="btn btn-primary w-100">Register</button>
+                    <button onclick="registerWithEmail()" class="btn btn-primary w-100" id="registerBtn">Register</button>
 
                     <div class="text-center mt-3">or</div>
 
-                    <button onclick="googleRegister()" class="btn btn-danger w-100 mt-2">Sign Up with Google</button>
+                    <button onclick="googleRegister()" class="btn btn-danger w-100 mt-2" id="googleBtn">Sign Up with Google</button>
 
                     <p class="text-center mt-4">
                         Already have an account? <a href="{{ route('login') }}">Login!</a>
@@ -56,6 +56,7 @@
         appId: "1:205264169507:web:3f024ab34abde7dc8c1f96",
         measurementId: "G-MZZ72360VC"
     });
+
     function registerWithEmail() {
         const email = document.getElementById('register_email').value;
         const password = document.getElementById('register_password').value;
@@ -66,6 +67,9 @@
             alert('Passwords do not match');
             return;
         }
+        // 🔥 Show spinner right after clicking
+        document.getElementById('loadingSpinner').style.display = 'flex';
+        document.getElementById('registerBtn').disabled = true;
 
         firebase.auth().createUserWithEmailAndPassword(email, password)
             .then(userCredential => {
@@ -77,30 +81,82 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     },
+                    credentials: 'same-origin',
                     body: JSON.stringify({ token })
                 });
             })
-            .then(() => window.location.href = '/')
-            .catch(error => alert('Register failed: ' + error.message));
+            .then(async response => {
+                const contentType = response.headers.get('content-type');
+                const data = contentType.includes('application/json')
+                    ? await response.json()
+                    : await response.text();
+
+                console.log('Registration Response:', data);
+                document.getElementById('loadingSpinner').style.display = 'flex';
+
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 200);
+            })
+            .catch(error => {
+                document.getElementById('loadingSpinner').style.display = 'none';
+                alert('Register failed: ' + error.message);
+                
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('registerBtn').disabled = false;
+            });
     }
 
-    function googleRegister() {
+    window.googleRegister = function () {
+        const csrf = document.querySelector('meta[name="csrf-token"]');
+        const token = csrf ? csrf.getAttribute('content') : null;
+
+        if (!token) {
+            alert('CSRF token not found!');
+            return;
+        }
+
+        
+        document.getElementById('loadingSpinner').style.display = 'flex';
+        document.getElementById('googleBtn').disabled = true;
+
         const provider = new firebase.auth.GoogleAuthProvider();
         firebase.auth().signInWithPopup(provider)
             .then(result => result.user.getIdToken())
-            .then(token => {
+            .then(firebaseToken => {
                 return fetch('/firebase-login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': token
                     },
-                    body: JSON.stringify({ token })
-                }).then(() => location.href = '/');
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ token: firebaseToken })
+                });
             })
-            .catch(error => alert('Register failed: ' + error.message));
-    }
-</script>
+            .then(async response => {
+                const contentType = response.headers.get('content-type');
+                const data = contentType.includes('application/json')
+                    ? await response.json()
+                    : await response.text();
+
+                console.log('Google Register Response:', data);
+                document.getElementById('loadingSpinner').style.display = 'flex';
+                
+
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 200);
+            })
+            .catch(error => {
+                document.getElementById('loadingSpinner').style.display = 'none';
+                alert('Register failed: ' + error.message);
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('googleBtn').disabled = false;
+            });
+    };
+    </script>
 @endpush
+

@@ -23,8 +23,8 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span
-                                aria-hidden="true">&times;</span></button>
+                        <button class="close" type="button" data-dismiss="" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>modal
                     </div>
                     <div class="modal-body">
                         <div class="embed-responsive embed-responsive-16by9">

@@ -21,11 +21,11 @@
                     <div class="form-group mb-4">
                         <input type="password" id="login_password" class="form-control" placeholder="Password" required>
                     </div>
-                    <button onclick="loginWithEmail()" class="btn btn-primary w-100">Login</button>
+                    <button onclick="loginWithEmail()" class="btn btn-primary w-100" id="loginBtn">Login</button>
 
                     <div class="text-center mt-3">or</div>
 
-                    <button onclick="googleLogin()" class="btn btn-danger w-100 mt-2">Login with Google</button>
+                    <button onclick="googleLogin()" class="btn btn-danger w-100 mt-2" id="googleBtn">Login with Google</button>
 
                     <p class="text-center mt-4">
                         Don’t have an account? <a href="{{ route('register') }}">Register!</a>
@@ -58,6 +58,10 @@
         const email = document.getElementById('login_email').value;
         const password = document.getElementById('login_password').value;
 
+        // 🔥 Show spinner right after clicking
+        document.getElementById('loadingSpinner').style.display = 'flex';
+        document.getElementById('loginBtn').disabled = true;
+
         firebase.auth().signInWithEmailAndPassword(email, password)
             .then(userCredential => userCredential.user.getIdToken())
             .then(token => {
@@ -72,16 +76,27 @@
                 });
             })
             .then(async response => {
-                    const contentType = response.headers.get('content-type');
-                    const data = contentType.includes('application/json')
-                        ? await response.json()
-                        : await response.text();
+                const contentType = response.headers.get('content-type');
+                const data = contentType.includes('application/json')
+                    ? await response.json()
+                    : await response.text();
 
-                    console.log('Response:', data);
+                console.log('Login Response:', data);
+
+                // ✅ Already spinning, just redirect after short delay
+                setTimeout(() => {
                     window.location.href = '/';
-                })
-            // .then(() => window.location.href = '/');
+                }, 200);
+            })
+            .catch(error => {
+                document.getElementById('loadingSpinner').style.display = 'none';
+                alert('Login failed: ' + error.message);
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('loginBtn').disabled = false; // or googleBtn
+
+            });
     }
+
     
 
     window.googleLogin = function () {
@@ -92,6 +107,9 @@
             alert('CSRF token not found!');
             return;
         }
+
+        document.getElementById('loadingSpinner').style.display = 'flex';
+        document.getElementById('googleBtn').disabled = true;
 
         const provider = new firebase.auth.GoogleAuthProvider();
         firebase.auth().signInWithPopup(provider)
@@ -114,14 +132,18 @@
                     : await response.text();
 
                 console.log('Response:', data);
-                // ✅ Delay to ensure session is fully stored before redirecting
+                document.getElementById('loadingSpinner').style.display = 'flex';
+                // ✅ Already spinning, just redirect after short delay
                 setTimeout(() => {
                     window.location.href = '/';
                 }, 200);
             })
             .catch(error => {
-                console.error('Login failed:', error);
+                document.getElementById('loadingSpinner').style.display = 'none';
                 alert('Login failed: ' + error.message);
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('googleBtn').disabled = false;
+
             });
     };
 
