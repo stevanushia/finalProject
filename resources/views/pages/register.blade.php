@@ -30,7 +30,10 @@
 
                     <div class="text-center mt-3">or</div>
 
-                    <button onclick="googleRegister()" class="btn btn-danger w-100 mt-2" id="googleBtn">Sign Up with Google</button>
+                    <button onclick="googleRegister()" class="btn btn-danger w-100 mt-2" id="googleBtn"><img class="image" data-alt-override="false" alt="G" srcset="
+                        https://www.gstatic.com/marketing-cms/assets/images/d5/dc/cfe9ce8b4425b410b49b7f2dd3f3/g.webp=s48-fcrop64=1,00000000ffffffff-rw 1x,
+                        https://www.gstatic.com/marketing-cms/assets/images/d5/dc/cfe9ce8b4425b410b49b7f2dd3f3/g.webp=s96-fcrop64=1,00000000ffffffff-rw 2x
+                      " width="30" height="30" loading="lazy" src="https://www.gstatic.com/marketing-cms/assets/images/d5/dc/cfe9ce8b4425b410b49b7f2dd3f3/g.webp=s48-fcrop64=1,00000000ffffffff-rw"> &nbsp;&nbsp;Sign Up with Google</button>
 
                     <p class="text-center mt-4">
                         Already have an account? <a href="{{ route('login') }}">Login!</a>
@@ -46,7 +49,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script>
-    firebase.initializeApp({
+    firebase.initializeApp{
         apiKey: "AIzaSyB2o8f5gcls6IxHPKaTMZVDdqtXur6gGWw",
         authDomain: "project-ta-df552.firebaseapp.com",
         databaseURL: "https://project-ta-df552-default-rtdb.firebaseio.com",
@@ -55,7 +58,7 @@
         messagingSenderId: "205264169507",
         appId: "1:205264169507:web:3f024ab34abde7dc8c1f96",
         measurementId: "G-MZZ72360VC"
-    });
+    };
 
     function registerWithEmail() {
         const email = document.getElementById('register_email').value;

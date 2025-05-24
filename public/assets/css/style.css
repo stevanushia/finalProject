@@ -12767,7 +12767,6 @@ span.page-link:hover, span.page-link:focus, span.page-link:active {
 	line-height: 14px;
 	text-align: center;
 	text-transform: uppercase;
-	color: #fff;
 	background: #e1e1e1;
 	border-radius: 4px;
 }
@@ -12789,6 +12788,7 @@ span.page-link:hover, span.page-link:focus, span.page-link:active {
 
 .badge-red {
 	background: #fd6565;
+	color: #fff;
 }
 
 .badge-orange {
@@ -12915,7 +12915,6 @@ span.page-link:hover, span.page-link:focus, span.page-link:active {
 }
 
 .card-title {
-	color: #fff;
 	margin-bottom: 0;
 	transition: all 300ms ease;
 }

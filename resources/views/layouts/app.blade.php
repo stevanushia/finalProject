@@ -4,7 +4,7 @@
     @include('partials.head')
 </head>
 <body>
-    <div class="preloader">
+    <div class="preloader loaded">
         <div class="preloader-body">
             <div class="preloader-item"></div>
         </div>
@@ -41,6 +41,25 @@
 
     {{-- Add any extra scripts here --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    
     @stack('scripts')
+    
+    <!-- Make sure jQuery and your template scripts are loaded -->
+    <script>\
+        // Ensure preloader is hidden on page load if template script fails
+        $(document).ready(function() {
+            // Add loaded class to preloader if it doesn't have it
+            setTimeout(function() {
+                $('.preloader').addClass('loaded');
+            }, 100);
+        });
+        
+        $(window).on('load', function() {
+            // Force hide preloader after page load
+            $('.preloader').addClass('loaded');
+        });
+    </script>
 </body>
 </html>

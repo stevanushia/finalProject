@@ -25,10 +25,16 @@
 
                     <div class="text-center mt-3">or</div>
 
-                    <button onclick="googleLogin()" class="btn btn-danger w-100 mt-2" id="googleBtn">Login with Google</button>
+                    <button onclick="googleLogin()" class="btn btn-danger w-100 mt-2" id="googleBtn">
+                        <img class="image" data-alt-override="false" alt="G" srcset="
+                            https://www.gstatic.com/marketing-cms/assets/images/d5/dc/cfe9ce8b4425b410b49b7f2dd3f3/g.webp=s48-fcrop64=1,00000000ffffffff-rw 1x,
+                            https://www.gstatic.com/marketing-cms/assets/images/d5/dc/cfe9ce8b4425b410b49b7f2dd3f3/g.webp=s96-fcrop64=1,00000000ffffffff-rw 2x
+                        " width="30" height="30" loading="lazy" src="https://www.gstatic.com/marketing-cms/assets/images/d5/dc/cfe9ce8b4425b410b49b7f2dd3f3/g.webp=s48-fcrop64=1,00000000ffffffff-rw"> 
+                        &nbsp;&nbsp;Login with Google
+                    </button>
 
                     <p class="text-center mt-4">
-                        Don’t have an account? <a href="{{ route('register') }}">Register!</a>
+                        Don't have an account? <a href="{{ route('register') }}">Register!</a>
                     </p>
                 </div>
             </div>
@@ -54,100 +60,255 @@
 
     firebase.initializeApp(firebaseConfig);
 
-    function loginWithEmail() {
-        const email = document.getElementById('login_email').value;
-        const password = document.getElementById('login_password').value;
-
-        // 🔥 Show spinner right after clicking
+    function showSpinner() {
         document.getElementById('loadingSpinner').style.display = 'flex';
-        document.getElementById('loginBtn').disabled = true;
-
-        firebase.auth().signInWithEmailAndPassword(email, password)
-            .then(userCredential => userCredential.user.getIdToken())
-            .then(token => {
-                return fetch('/firebase-login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({ token })
-                });
-            })
-            .then(async response => {
-                const contentType = response.headers.get('content-type');
-                const data = contentType.includes('application/json')
-                    ? await response.json()
-                    : await response.text();
-
-                console.log('Login Response:', data);
-
-                // ✅ Already spinning, just redirect after short delay
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 200);
-            })
-            .catch(error => {
-                document.getElementById('loadingSpinner').style.display = 'none';
-                alert('Login failed: ' + error.message);
-                document.getElementById('loadingSpinner').style.display = 'none';
-                document.getElementById('loginBtn').disabled = false; // or googleBtn
-
-            });
     }
 
-    
+    function hideSpinner() {
+        document.getElementById('loadingSpinner').style.display = 'none';
+    }
+
+    function disableButton(buttonId) {
+        document.getElementById(buttonId).disabled = true;
+    }
+
+    function enableButton(buttonId) {
+        document.getElementById(buttonId).disabled = false;
+    }
+
+    function showError(message) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Login Failed',
+                text: message
+            });
+        } else {
+            alert('Login failed: ' + message);
+        }
+    }
+
+    function showSuccess(message) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: message,
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+    }
+
+    async function sendTokenToBackend(token) {
+        try {
+            console.log('Sending token to backend...');
+            
+            const response = await fetch('/firebase-login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ token })
+            });
+
+            console.log('Backend response status:', response.status);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Backend error response:', errorText);
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Backend response data:', data);
+
+            if (data.error) {
+                throw new Error(data.message || 'Authentication failed');
+            }
+
+            if (data.status === 'success') {
+                showSuccess('Login successful! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = data.redirect_url || '/';
+                }, 1500);
+                return true;
+            }
+
+            throw new Error('Unexpected response from server');
+
+        } catch (error) {
+            console.error('Backend authentication error:', error);
+            throw error;
+        }
+    }
+
+    function loginWithEmail() {
+    const email = document.getElementById('login_email').value;
+    const password = document.getElementById('login_password').value;
+
+    if (!email || !password) {
+        showError('Please enter both email and password');
+        return;
+    }
+
+    showSpinner();
+    disableButton('loginBtn');
+
+    firebase.auth().signInWithEmailAndPassword(email, password)
+        .then(userCredential => {
+            console.log('Firebase email login successful:', userCredential.user);
+            return userCredential.user.getIdToken();
+        })
+        .then(token => {
+            console.log('Got Firebase ID token');
+            return sendTokenToBackend(token);
+        })
+        .then(() => {
+            // Success is handled in sendTokenToBackend
+            hideSpinner();
+            enableButton('loginBtn');
+        })
+        .catch(error => {
+            console.error('Login error:', error);
+            hideSpinner();
+            enableButton('loginBtn');
+            
+            let errorMessage = 'Login failed. Please try again.';
+            if (error.code) {
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        errorMessage = 'No account found with this email.';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage = 'Incorrect password.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'Invalid email address.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Too many failed attempts. Please try again later.';
+                        break;
+                    default:
+                        errorMessage = error.message;
+                }
+            }
+            showError(errorMessage);
+        });
+}
+
+window.googleLogin = function () {
+    const csrf = document.querySelector('meta[name="csrf-token"]');
+    const token = csrf ? csrf.getAttribute('content') : null;
+
+    if (!token) {
+        showError('CSRF token not found! Please refresh the page.');
+        return;
+    }
+
+    showSpinner();
+    disableButton('googleBtn');
+
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.addScope('email');
+    provider.addScope('profile');
+
+    firebase.auth().signInWithPopup(provider)
+        .then(result => {
+            console.log('Firebase Google login successful:', result.user);
+            return result.user.getIdToken();
+        })
+        .then(firebaseToken => {
+            console.log('Got Firebase ID token from Google login');
+            return sendTokenToBackend(firebaseToken);
+        })
+        .then(() => {
+            // Success is handled in sendTokenToBackend
+            hideSpinner();
+            enableButton('googleBtn');
+        })
+        .catch(error => {
+            console.error('Google login error:', error);
+            hideSpinner();
+            enableButton('googleBtn');
+            
+            let errorMessage = 'Google login failed. Please try again.';
+            if (error.code) {
+                switch (error.code) {
+                    case 'auth/popup-closed-by-user':
+                        errorMessage = 'Sign-in cancelled by user.';
+                        break;
+                    case 'auth/popup-blocked':
+                        errorMessage = 'Popup was blocked. Please allow popups and try again.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'Network error. Please check your connection.';
+                        break;
+                    case 'auth/account-exists-with-different-credential':
+                        errorMessage = 'An account already exists with this email using a different sign-in method.';
+                        break;
+                    default:
+                        errorMessage = error.message;
+                }
+            }
+            showError(errorMessage);
+        });
+};
 
     window.googleLogin = function () {
         const csrf = document.querySelector('meta[name="csrf-token"]');
         const token = csrf ? csrf.getAttribute('content') : null;
 
         if (!token) {
-            alert('CSRF token not found!');
+            showError('CSRF token not found! Please refresh the page.');
             return;
         }
 
-        document.getElementById('loadingSpinner').style.display = 'flex';
-        document.getElementById('googleBtn').disabled = true;
+        showSpinner();
+        disableButton('googleBtn');
 
         const provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithPopup(provider)
-            .then(result => result.user.getIdToken())
-            .then(firebaseToken => {
-                return fetch('/firebase-login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': token
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({ token: firebaseToken })
-                });
-            })
-            .then(async response => {
-                const contentType = response.headers.get('content-type');
-                const data = contentType.includes('application/json')
-                    ? await response.json()
-                    : await response.text();
+        provider.addScope('email');
+        provider.addScope('profile');
 
-                console.log('Response:', data);
-                document.getElementById('loadingSpinner').style.display = 'flex';
-                // ✅ Already spinning, just redirect after short delay
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 200);
+        firebase.auth().signInWithPopup(provider)
+            .then(result => {
+                console.log('Firebase Google login successful:', result.user);
+                return result.user.getIdToken();
+            })
+            .then(firebaseToken => {
+                console.log('Got Firebase ID token from Google login');
+                return sendTokenToBackend(firebaseToken);
             })
             .catch(error => {
-                document.getElementById('loadingSpinner').style.display = 'none';
-                alert('Login failed: ' + error.message);
-                document.getElementById('loadingSpinner').style.display = 'none';
-                document.getElementById('googleBtn').disabled = false;
-
+                console.error('Google login error:', error);
+                hideSpinner();
+                enableButton('googleBtn');
+                
+                let errorMessage = 'Google login failed. Please try again.';
+                if (error.code) {
+                    switch (error.code) {
+                        case 'auth/popup-closed-by-user':
+                            errorMessage = 'Sign-in cancelled by user.';
+                            break;
+                        case 'auth/popup-blocked':
+                            errorMessage = 'Popup was blocked. Please allow popups and try again.';
+                            break;
+                        case 'auth/network-request-failed':
+                            errorMessage = 'Network error. Please check your connection.';
+                            break;
+                        case 'auth/account-exists-with-different-credential':
+                            errorMessage = 'An account already exists with this email using a different sign-in method.';
+                            break;
+                        default:
+                            errorMessage = error.message;
+                    }
+                }
+                showError(errorMessage);
             });
     };
-
-//
-
 </script>
 @endpush

@@ -57,6 +57,7 @@
                                     </a>
                                     <ul class="dropdown-menu">
                                         <li><a class="dropdown-item" href="{{ route('login') }}">My Profile</a></li>
+                                        <li><a class="dropdown-item" href="">Create Team</a></li>
                                         <li>
                                             <form action="{{ route('logout') }}" method="POST">
                                                 @csrf
@@ -127,18 +128,18 @@
                         <div class="rd-navbar-main-container container">
                             <!-- RD Navbar Nav-->
                             <ul class="rd-navbar-nav">
-                                <li class="rd-nav-item active"><a class="rd-nav-link" href="index.html">Home</a>
+                                <li class="rd-nav-item active"><a class="rd-nav-link" href="/">Home</a>
                                 </li>
                                 <li class="rd-nav-item"><a class="rd-nav-link"
-                                        href="#">Game
+                                        href="{{ route('game.list') }}">Game
                                         overview</a>
-                                </li>
-                                <li class="rd-nav-item"><a class="rd-nav-link"
-                                        href="#">Typography</a>
                                 </li>
                                 <li class="rd-nav-item"><a class="rd-nav-link"
                                         href="#">Contact
                                         us</a>
+                                </li>
+                                <li class="rd-nav-item"><a class="rd-nav-link"
+                                        href="#">Tournament</a>
                                 </li>
                             </ul>
                             <div class="rd-navbar-main-element">
