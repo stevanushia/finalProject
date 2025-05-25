@@ -137,7 +137,7 @@
             </div>
         </div>
 
-        <!-- Shot Breakdown -->
+        <!-- Shot Analysis -->
         <div class="col-lg-6 mb-4">
             <div class="card h-100 shadow">
                 <div class="card-header bg-primary text-white">
@@ -149,19 +149,109 @@
                     <div style="height: 250px; position: relative; width: 100%; overflow: hidden;">
                         <canvas id="shotChart"></canvas>
                     </div>
-                    <div class="mt-3">
-                        <div class="row">
-                            <div class="col-6" style="text-align: center">
-                                <h6 class="fw-bold {{ $isHomeWinner ? 'text-success' : ($isTie ? 'text-warning' : 'text-danger') }}">{{ $overview['homeTeam'] }}</h6>
-                                <small class="d-block text-dark fw-semibold">3PT: {{ $overview['scoringBreakdown']['home']['3PT'] }}</small>
-                                <small class="d-block text-dark fw-semibold">2PT: {{ $overview['scoringBreakdown']['home']['2PT'] }}</small>
-                                <small class="d-block text-dark fw-semibold">FT: {{ $overview['scoringBreakdown']['home']['1PT'] }}</small>
+                    <div class="mt-4">
+                        <!-- Shot Statistics Grid -->
+                        <div class="row g-3">
+                            <!-- Home Team Stats -->
+                            <div class="col-6">
+                                <div class="card border-0 bg-white shadow-sm">
+                                    <div class="card-header text-center py-2 {{ $isHomeWinner ? 'bg-success' : ($isTie ? 'bg-warning' : 'bg-danger') }}">
+                                        <h6 class="mb-0 fw-bold text-white">{{ $overview['homeTeam'] }}</h6>
+                                    </div>
+                                    <div class="card-body p-2">
+                                        <div class="row text-center g-1">
+                                            <!-- 3PT Stats -->
+                                            <div class="col-4">
+                                                <div class="bg-light rounded p-2">
+                                                    <div class="fw-bold text-primary mb-1">3PT</div>
+                                                    <div class="small">
+                                                        <div class="fw-bold text-success">{{ $overview['shotAnalysis']['home']['made']['3PT'] }}</div>
+                                                        <div class="text-muted">{{ $overview['shotAnalysis']['home']['total']['3PT'] }}</div>
+                                                        <div class="small text-dark">{{ $overview['shotAnalysis']['home']['percentage']['3PT'] }}%</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- 2PT Stats -->
+                                            <div class="col-4">
+                                                <div class="bg-light rounded p-2">
+                                                    <div class="fw-bold text-primary mb-1">2PT</div>
+                                                    <div class="small">
+                                                        <div class="fw-bold text-success">{{ $overview['shotAnalysis']['home']['made']['2PT'] }}</div>
+                                                        <div class="text-muted">{{ $overview['shotAnalysis']['home']['total']['2PT'] }}</div>
+                                                        <div class="small text-dark">{{ $overview['shotAnalysis']['home']['percentage']['2PT'] }}%</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- FT Stats -->
+                                            <div class="col-4">
+                                                <div class="bg-light rounded p-2">
+                                                    <div class="fw-bold text-primary mb-1">FT</div>
+                                                    <div class="small">
+                                                        <div class="fw-bold text-success">{{ $overview['shotAnalysis']['home']['made']['1PT'] }}</div>
+                                                        <div class="text-muted">{{ $overview['shotAnalysis']['home']['total']['1PT'] }}</div>
+                                                        <div class="small text-dark">{{ $overview['shotAnalysis']['home']['percentage']['1PT'] }}%</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Overall Stats -->
+                                        <div class="text-center mt-2 p-2 bg-light rounded">
+                                            <div class="small fw-bold text-dark">Overall: {{ $overview['shotAnalysis']['home']['percentage']['overall'] }}%</div>
+                                            <div class="small text-muted">{{ $overview['shotAnalysis']['home']['made']['total'] }}/{{ $overview['shotAnalysis']['home']['total']['total'] }}</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-6 text-center">
-                                <h6 class="fw-bold {{ $isAwayWinner ? 'text-success' : ($isTie ? 'text-warning' : 'text-danger') }}">{{ $overview['awayTeam'] }}</h6>
-                                <small class="d-block text-dark fw-semibold">3PT: {{ $overview['scoringBreakdown']['away']['3PT'] }}</small>
-                                <small class="d-block text-dark fw-semibold">2PT: {{ $overview['scoringBreakdown']['away']['2PT'] }}</small>
-                                <small class="d-block text-dark fw-semibold">FT: {{ $overview['scoringBreakdown']['away']['1PT'] }}</small>
+
+                            <!-- Away Team Stats -->
+                            <div class="col-6">
+                                <div class="card border-0 bg-white shadow-sm">
+                                    <div class="card-header text-center py-2 {{ $isAwayWinner ? 'bg-success' : ($isTie ? 'bg-warning' : 'bg-danger') }}">
+                                        <h6 class="mb-0 fw-bold text-white">{{ $overview['awayTeam'] }}</h6>
+                                    </div>
+                                    <div class="card-body p-2">
+                                        <div class="row text-center g-1">
+                                            <!-- 3PT Stats -->
+                                            <div class="col-4">
+                                                <div class="bg-light rounded p-2">
+                                                    <div class="fw-bold text-primary mb-1">3PT</div>
+                                                    <div class="small">
+                                                        <div class="fw-bold text-success">{{ $overview['shotAnalysis']['away']['made']['3PT'] }}</div>
+                                                        <div class="text-muted">{{ $overview['shotAnalysis']['away']['total']['3PT'] }}</div>
+                                                        <div class="small text-dark">{{ $overview['shotAnalysis']['away']['percentage']['3PT'] }}%</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- 2PT Stats -->
+                                            <div class="col-4">
+                                                <div class="bg-light rounded p-2">
+                                                    <div class="fw-bold text-primary mb-1">2PT</div>
+                                                    <div class="small">
+                                                        <div class="fw-bold text-success">{{ $overview['shotAnalysis']['away']['made']['2PT'] }}</div>
+                                                        <div class="text-muted">{{ $overview['shotAnalysis']['away']['total']['2PT'] }}</div>
+                                                        <div class="small text-dark">{{ $overview['shotAnalysis']['away']['percentage']['2PT'] }}%</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- FT Stats -->
+                                            <div class="col-4">
+                                                <div class="bg-light rounded p-2">
+                                                    <div class="fw-bold text-primary mb-1">FT</div>
+                                                    <div class="small">
+                                                        <div class="fw-bold text-success">{{ $overview['shotAnalysis']['away']['made']['1PT'] }}</div>
+                                                        <div class="text-muted">{{ $overview['shotAnalysis']['away']['total']['1PT'] }}</div>
+                                                        <div class="small text-dark">{{ $overview['shotAnalysis']['away']['percentage']['1PT'] }}%</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Overall Stats -->
+                                        <div class="text-center mt-2 p-2 bg-light rounded">
+                                            <div class="small fw-bold text-dark">Overall: {{ $overview['shotAnalysis']['away']['percentage']['overall'] }}%</div>
+                                            <div class="small text-muted">{{ $overview['shotAnalysis']['away']['made']['total'] }}/{{ $overview['shotAnalysis']['away']['total']['total'] }}</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -173,45 +263,285 @@
     <!-- Player Statistics -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-dark">
-                    <h5 class="card-title mb-0 fw-bold">
-                        <i class="fas fa-users me-2"></i>&nbsp;&nbsp; Top Performers
-                    </h5>
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient text-white position-relative overflow-hidden" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="position-absolute top-0 end-0 opacity-10">
+                        <i class="fas fa-basketball-ball" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4 class="card-title mb-0 fw-bold position-relative">
+                        <i class="fas fa-users me-3"></i>Player Statistics
+                    </h4>
+                    <p class="mb-0 mt-1 opacity-75">Individual performance breakdown</p>
                 </div>
-                <div class="card-body bg-light">
+                <div class="card-body p-0 bg-light">
                     @if(count($overview['playerStats']) > 0)
-                        <div class="row">
-                            @foreach(array_slice($overview['playerStats'], 0, 6) as $index => $player)
-                            @php
-                                $isPlayerOnWinningTeam = ($player['team'] === $overview['homeTeam'] && $isHomeWinner) || 
-                                                        ($player['team'] === $overview['awayTeam'] && $isAwayWinner);
-                                $playerBadgeClass = $isPlayerOnWinningTeam ? 'bg-success' : ($isTie ? 'bg-warning' : 'bg-danger');
-                                $playerBorderClass = $isPlayerOnWinningTeam ? 'border-success' : ($isTie ? 'border-warning' : 'border-danger');
-                            @endphp
-                            <div class="col-lg-4 col-md-6 mb-3">
-                                <div class="card {{ $playerBorderClass }} shadow-sm">
-                                    <div class="card-body text-center bg-white">
-                                        <h6 class="card-title text-dark fw-bold">{{ $player['name'] }}</h6>
-                                        <div class="badge {{ $playerBadgeClass }} mb-2 fw-bold">
-                                            {{ $player['team'] }}
+                        @php
+                            // Separate players by team (HOME/AWAY instead of team names)
+                            $homePlayers = collect($overview['playerStats'])->where('team', 'HOME')->values();
+                            $awayPlayers = collect($overview['playerStats'])->where('team', 'AWAY')->values();
+                            
+                            // Team tab styling based on winner - more vibrant colors
+                            $homeTabClass = $isHomeWinner ? 'btn-success shadow-sm' : ($isTie ? 'btn-warning shadow-sm' : 'btn-outline-danger');
+                            $awayTabClass = $isAwayWinner ? 'btn-success shadow-sm' : ($isTie ? 'btn-warning shadow-sm' : 'btn-outline-danger');
+                        @endphp
+                        
+                        <!-- Enhanced Team Tabs -->
+                        <ul class="nav nav-tabs nav-fill border-0 bg-white shadow-sm" id="playerTabs" role="tablist" style="border-radius: 0;">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active fw-bold border-0 py-3 px-4 position-relative" 
+                                        id="home-tab" 
+                                        data-bs-toggle="tab" 
+                                        data-bs-target="#home-players" 
+                                        type="button" 
+                                        role="tab" 
+                                        aria-controls="home-players" 
+                                        aria-selected="true"
+                                        style="border-radius: 0;"
+                                        data-home-class="{{ $homeTabClass }}"
+                                        data-away-class="{{ $awayTabClass }}">
+                                    <i class="fas fa-home me-2"></i>
+                                    <span class="d-block fw-bold">{{ $overview['homeTeam'] }}</span>
+                                    <small class="text-muted">{{ count($homePlayers) }} players</small>
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link fw-bold border-0 py-3 px-4" 
+                                        id="away-tab" 
+                                        data-bs-toggle="tab" 
+                                        data-bs-target="#away-players" 
+                                        type="button" 
+                                        role="tab" 
+                                        aria-controls="away-players" 
+                                        aria-selected="false"
+                                        style="border-radius: 0;"
+                                        data-home-class="{{ $homeTabClass }}"
+                                        data-away-class="{{ $awayTabClass }}">
+                                    <i class="fas fa-plane me-2"></i>
+                                    <span class="d-block fw-bold">{{ $overview['awayTeam'] }}</span>
+                                    <small class="text-muted">{{ count($awayPlayers) }} players</small>
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <!-- Enhanced Tab Content -->
+                        <div class="tab-content p-4" id="playerTabContent" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 400px;">
+                            <!-- Home Team Players -->
+                            <div class="tab-pane fade show active" id="home-players" role="tabpanel" aria-labelledby="home-tab">
+                                @if(count($homePlayers) > 0)
+                                    <div class="row g-4">
+                                        @foreach($homePlayers as $player)
+                                        <div class="col-xl-3 col-lg-4 col-md-6">
+                                            <div class="card border-0 shadow-lg h-100 position-relative overflow-hidden" 
+                                                style="background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%); transition: all 0.3s ease; border-radius: 1rem;">
+                                                
+                                                <!-- Card Header with Jersey Number -->
+                                                <div class="position-absolute top-0 end-0 m-3">
+                                                    @if($player['jerseyNumber'])
+                                                        <div class="badge bg-primary rounded-circle p-2 shadow" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                                            <span class="fw-bold">#{{ $player['jerseyNumber'] }}</span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                
+                                                <!-- Decorative Elements -->
+                                                <div class="position-absolute top-0 start-0 opacity-5">
+                                                    <i class="fas fa-basketball-ball" style="font-size: 3rem; color: #667eea;"></i>
+                                                </div>
+                                                
+                                                <div class="card-body text-center p-4">
+                                                    <!-- Player Name -->
+                                                    <h5 class="card-title text-dark fw-bold mb-2" style="font-size: 1.25rem;">
+                                                        {{ $player['name'] }}
+                                                    </h5>
+                                                    
+                                                    <!-- Position and Physical Stats -->
+                                                    @if($player['position'] || $player['heightWeightDisplay'])
+                                                        <div class="mb-3">
+                                                            @if($player['position'])
+                                                                <span class="badge bg-secondary me-2 px-3 py-1 rounded-pill">{{ $player['position'] }}</span>
+                                                            @endif
+                                                            @if($player['heightWeightDisplay'])
+                                                                <div class="text-muted small mt-1">{{ $player['heightWeightDisplay'] }}</div>
+                                                            @endif
+                                                        </div>
+                                                    @endif
+                                                    
+                                                    <!-- Team Badge -->
+                                                    <div class="mb-3">
+                                                        <span class="badge px-3 py-2 rounded-pill fw-bold text-white shadow-sm" 
+                                                            style="background: linear-gradient(135deg, {{ $isHomeWinner ? '#28a745, #20c997' : ($isTie ? '#ffc107, #fd7e14' : '#dc3545, #e83e8c') }});">
+                                                            <i class="fas fa-home me-1"></i>{{ $overview['homeTeam'] }}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <!-- Points Display -->
+                                                    <div class="mb-4">
+                                                        <div class="display-4 fw-bold mb-1" style="color: #667eea;">{{ $player['points'] }}</div>
+                                                        <div class="text-uppercase fw-semibold text-muted small tracking-wider" style="letter-spacing: 1px;">Total Points</div>
+                                                    </div>
+                                                    
+                                                    <!-- Shot Statistics -->
+                                                    <div class="row g-2 mb-3">
+                                                        <div class="col-4">
+                                                            <div class="bg-light rounded-lg p-2 border">
+                                                                <div class="fw-bold text-success" style="font-size: 1.1rem;">{{ $player['shots']['3PT'] }}</div>
+                                                                <small class="text-muted fw-semibold">3PT</small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <div class="bg-light rounded-lg p-2 border">
+                                                                <div class="fw-bold text-primary" style="font-size: 1.1rem;">{{ $player['shots']['2PT'] }}</div>
+                                                                <small class="text-muted fw-semibold">2PT</small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <div class="bg-light rounded-lg p-2 border">
+                                                                <div class="fw-bold text-warning" style="font-size: 1.1rem;">{{ $player['shots']['1PT'] }}</div>
+                                                                <small class="text-muted fw-semibold">FT</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Additional Info -->
+                                                    @if($player['age'])
+                                                        <div class="border-top pt-3 mt-3">
+                                                            <small class="text-muted">
+                                                                <i class="fas fa-birthday-cake me-1"></i>Age: <span class="fw-semibold">{{ $player['age'] }}</span>
+                                                            </small>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                
+                                                <!-- Hover Effect -->
+                                                <style>
+                                                    .card:hover {
+                                                        transform: translateY(-5px);
+                                                        box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+                                                    }
+                                                </style>
+                                            </div>
                                         </div>
-                                        <div class="display-6 fw-bold text-dark">{{ $player['points'] }}</div>
-                                        <small class="text-dark fw-semibold">Points</small>
-                                        <div class="mt-2">
-                                            <small class="d-block text-dark fw-semibold">3PT: {{ $player['shots']['3PT'] }}</small>
-                                            <small class="d-block text-dark fw-semibold">2PT: {{ $player['shots']['2PT'] }}</small>
-                                            <small class="d-block text-dark fw-semibold">FT: {{ $player['shots']['1PT'] }}</small>
-                                        </div>
+                                        @endforeach
                                     </div>
-                                </div>
+                                @else
+                                    <div class="text-center py-5">
+                                        <div class="mb-4">
+                                            <i class="fas fa-user-slash display-1 text-muted opacity-50"></i>
+                                        </div>
+                                        <h4 class="text-muted fw-light">No {{ $overview['homeTeam'] }} Players</h4>
+                                        <p class="text-muted">No player statistics available for this team</p>
+                                    </div>
+                                @endif
                             </div>
-                            @endforeach
+                            
+                            <!-- Away Team Players -->
+                            <div class="tab-pane fade" id="away-players" role="tabpanel" aria-labelledby="away-tab">
+                                @if(count($awayPlayers) > 0)
+                                    <div class="row g-4">
+                                        @foreach($awayPlayers as $player)
+                                        <div class="col-xl-3 col-lg-4 col-md-6">
+                                            <div class="card border-0 shadow-lg h-100 position-relative overflow-hidden" 
+                                                style="background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%); transition: all 0.3s ease; border-radius: 1rem;">
+                                                
+                                                <!-- Card Header with Jersey Number -->
+                                                <div class="position-absolute top-0 end-0 m-3">
+                                                    @if($player['jerseyNumber'])
+                                                        <div class="badge bg-primary rounded-circle p-2 shadow" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                                            <span class="fw-bold">#{{ $player['jerseyNumber'] }}</span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                
+                                                <!-- Decorative Elements -->
+                                                <div class="position-absolute top-0 start-0 opacity-5">
+                                                    <i class="fas fa-basketball-ball" style="font-size: 3rem; color: #667eea;"></i>
+                                                </div>
+                                                
+                                                <div class="card-body text-center p-4">
+                                                    <!-- Player Name -->
+                                                    <h5 class="card-title text-dark fw-bold mb-2" style="font-size: 1.25rem;">
+                                                        {{ $player['name'] }}
+                                                    </h5>
+                                                    
+                                                    <!-- Position and Physical Stats -->
+                                                    @if($player['position'] || $player['heightWeightDisplay'])
+                                                        <div class="mb-3">
+                                                            @if($player['position'])
+                                                                <span class="badge bg-secondary me-2 px-3 py-1 rounded-pill">{{ $player['position'] }}</span>
+                                                            @endif
+                                                            @if($player['heightWeightDisplay'])
+                                                                <div class="text-muted small mt-1">{{ $player['heightWeightDisplay'] }}</div>
+                                                            @endif
+                                                        </div>
+                                                    @endif
+                                                    
+                                                    <!-- Team Badge -->
+                                                    <div class="mb-3">
+                                                        <span class="badge px-3 py-2 rounded-pill fw-bold text-white shadow-sm" 
+                                                            style="background: linear-gradient(135deg, {{ $isAwayWinner ? '#28a745, #20c997' : ($isTie ? '#ffc107, #fd7e14' : '#dc3545, #e83e8c') }});">
+                                                            <i class="fas fa-plane me-1"></i>{{ $overview['awayTeam'] }}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <!-- Points Display -->
+                                                    <div class="mb-4">
+                                                        <div class="display-4 fw-bold mb-1" style="color: #667eea;">{{ $player['points'] }}</div>
+                                                        <div class="text-uppercase fw-semibold text-muted small tracking-wider" style="letter-spacing: 1px;">Total Points</div>
+                                                    </div>
+                                                    
+                                                    <!-- Shot Statistics -->
+                                                    <div class="row g-2 mb-3">
+                                                        <div class="col-4">
+                                                            <div class="bg-light rounded-lg p-2 border">
+                                                                <div class="fw-bold text-success" style="font-size: 1.1rem;">{{ $player['shots']['3PT'] }}</div>
+                                                                <small class="text-muted fw-semibold">3PT</small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <div class="bg-light rounded-lg p-2 border">
+                                                                <div class="fw-bold text-primary" style="font-size: 1.1rem;">{{ $player['shots']['2PT'] }}</div>
+                                                                <small class="text-muted fw-semibold">2PT</small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <div class="bg-light rounded-lg p-2 border">
+                                                                <div class="fw-bold text-warning" style="font-size: 1.1rem;">{{ $player['shots']['1PT'] }}</div>
+                                                                <small class="text-muted fw-semibold">FT</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Additional Info -->
+                                                    @if($player['age'])
+                                                        <div class="border-top pt-3 mt-3">
+                                                            <small class="text-muted">
+                                                                <i class="fas fa-birthday-cake me-1"></i>Age: <span class="fw-semibold">{{ $player['age'] }}</span>
+                                                            </small>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-center py-5">
+                                        <div class="mb-4">
+                                            <i class="fas fa-user-slash display-1 text-muted opacity-50"></i>
+                                        </div>
+                                        <h4 class="text-muted fw-light">No {{ $overview['awayTeam'] }} Players</h4>
+                                        <p class="text-muted">No player statistics available for this team</p>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     @else
-                        <div class="text-center py-4">
-                            <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No player statistics available</h5>
+                        <div class="text-center py-5">
+                            <div class="mb-4">
+                                <i class="fas fa-chart-bar display-1 text-muted opacity-50"></i>
+                            </div>
+                            <h4 class="text-muted fw-light">No Player Statistics Available</h4>
+                            <p class="text-muted">Player statistics will appear here once the game data is loaded</p>
                         </div>
                     @endif
                 </div>
@@ -233,12 +563,33 @@
                         <div class="timeline-container" style="max-height: 400px; overflow-y: auto;">
                             @foreach(array_reverse($overview['gameTimeline']) as $event)
                             @php
-                                $isEventTeamWinning = ($event['team'] === $overview['homeTeam'] && $isHomeWinner) || 
-                                                    ($event['team'] === $overview['awayTeam'] && $isAwayWinner);
-                                $eventBgClass = $isEventTeamWinning ? 'bg-success bg-opacity-10 border-start border-success border-3' : 
-                                            ($isTie ? 'bg-warning bg-opacity-10 border-start border-warning border-3' : 
-                                                'bg-danger bg-opacity-10 border-start border-danger border-3');
-                                $eventBadgeClass = $isEventTeamWinning ? 'bg-success' : ($isTie ? 'bg-warning' : 'bg-danger');
+                                // Dynamic styling based on event type with better contrast
+                                if ($event['type'] === 'score') {
+                                    $eventBgClass = 'bg-white border-start border-success border-4';
+                                    $eventBadgeClass = 'bg-success';
+                                    $eventIcon = 'fas fa-basketball-ball text-success';
+                                } elseif (in_array($event['type'], ['shot_miss', 'free_throw_miss'])) {
+                                    $eventBgClass = 'bg-white border-start border-warning border-4';
+                                    $eventBadgeClass = 'bg-warning text-dark';
+                                    $eventIcon = 'fas fa-times-circle text-warning';
+                                } elseif (in_array($event['type'], ['foul', 'technical_foul'])) {
+                                    $eventBgClass = 'bg-white border-start border-danger border-4';
+                                    $eventBadgeClass = 'bg-danger';
+                                    $eventIcon = 'fas fa-exclamation-triangle text-danger';
+                                } elseif ($event['type'] === 'timeout') {
+                                    $eventBgClass = 'bg-white border-start border-info border-4';
+                                    $eventBadgeClass = 'bg-info';
+                                    $eventIcon = 'fas fa-pause-circle text-info';
+                                } elseif (in_array($event['type'], ['quarter_start', 'quarter_end', 'game_start', 'game_end'])) {
+                                    $eventBgClass = 'bg-white border-start border-secondary border-4';
+                                    $eventBadgeClass = 'bg-secondary';
+                                    $eventIcon = 'fas fa-flag text-secondary';
+                                } else {
+                                    $eventBgClass = 'bg-white border-start border-secondary border-4';
+                                    $eventBadgeClass = 'bg-secondary';
+                                    $eventIcon = 'fas fa-circle text-secondary';
+                                }
+                                $eventTextClass = 'text-dark';
                             @endphp
                             <div class="d-flex mb-3 p-3 {{ $eventBgClass }} rounded shadow-sm">
                                 <div class="flex-shrink-0">
@@ -247,11 +598,26 @@
                                     </span>
                                 </div>
                                 <div class="flex-grow-1 ms-3">
-                                    <div class="fw-bold text-white">{{ $event['player'] }} ({{ $event['team'] }})</div>
-                                    <small class="text-white fw-semibold">{{ $event['shotType'] }} - {{ $event['points'] }} points</small>
+                                    <div class="d-flex align-items-center mb-1">
+                                        <i class="{{ $eventIcon }} me-2 {{ $eventTextClass }}"></i>
+                                        <div class="fw-bold {{ $eventTextClass }}">
+                                            @if($event['type'] === 'score')
+                                                {{ $event['player'] }} ({{ $event['team'] }})
+                                            @else
+                                                {{ $event['description'] }}
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <small class="{{ $eventTextClass }} fw-semibold">
+                                        @if($event['type'] === 'score')
+                                            {{ $event['shotType'] }} - {{ $event['points'] }} points
+                                        @else
+                                            {{ ucfirst(str_replace('_', ' ', $event['type'])) }}
+                                        @endif
+                                    </small>
                                 </div>
                                 <div class="flex-shrink-0">
-                                    <div class="fw-bold text-white">{{ $event['homeScore'] }} - {{ $event['awayScore'] }}</div>
+                                    <div class="fw-bold {{ $eventTextClass }}">{{ $event['homeScore'] }} - {{ $event['awayScore'] }}</div>
                                 </div>
                             </div>
                             @endforeach
@@ -302,6 +668,27 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script src="{{ asset('assets/js/core.min.js') }}"></script>
 <script src="{{ asset('assets/js/script.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const homeTab = document.getElementById('home-tab');
+        const awayTab = document.getElementById('away-tab');
+        
+        // Set initial classes
+        homeTab.className = 'nav-link active fw-bold border-0 py-3 px-4 position-relative ' + homeTab.getAttribute('data-home-class');
+        awayTab.className = 'nav-link fw-bold border-0 py-3 px-4 ' + awayTab.getAttribute('data-away-class');
+        
+        // Add event listeners
+        homeTab.addEventListener('shown.bs.tab', function() {
+            this.className = 'nav-link active fw-bold border-0 py-3 px-4 position-relative ' + this.getAttribute('data-home-class');
+            awayTab.className = 'nav-link fw-bold border-0 py-3 px-4 ' + awayTab.getAttribute('data-away-class');
+        });
+        
+        awayTab.addEventListener('shown.bs.tab', function() {
+            this.className = 'nav-link active fw-bold border-0 py-3 px-4 position-relative ' + this.getAttribute('data-away-class');
+            homeTab.className = 'nav-link fw-bold border-0 py-3 px-4 ' + homeTab.getAttribute('data-home-class');
+        });
+    });
+</script>
 <script>
     // Determine winner for chart colors
     const homeScore = {{ $overview['homeScore'] }};
@@ -421,44 +808,52 @@
         border: isAwayWinner ? 'rgba(40, 167, 69, 1)' : (isTie ? 'rgba(255, 193, 7, 1)' : 'rgba(220, 53, 69, 1)')
     };
 
+    // Shot Analysis Chart - Updated to show made vs missed shots
     const shotCtx = document.getElementById('shotChart').getContext('2d');
     const shotChart = new Chart(shotCtx, {
-        type: 'doughnut',
+        type: 'bar',
         data: {
-            labels: [
-                '{{ $overview['homeTeam'] }} 3PT',
-                '{{ $overview['homeTeam'] }} 2PT', 
-                '{{ $overview['homeTeam'] }} 1PT',
-                '{{ $overview['awayTeam'] }} 3PT',
-                '{{ $overview['awayTeam'] }} 2PT',
-                '{{ $overview['awayTeam'] }} 1PT'
-            ],
+            labels: ['3PT', '2PT', 'FT'],
             datasets: [{
+                label: '{{ $overview['homeTeam'] }} Made',
                 data: [
-                    {{ $overview['scoringBreakdown']['home']['3PT'] }},
-                    {{ $overview['scoringBreakdown']['home']['2PT'] }},
-                    {{ $overview['scoringBreakdown']['home']['1PT'] }},
-                    {{ $overview['scoringBreakdown']['away']['3PT'] }},
-                    {{ $overview['scoringBreakdown']['away']['2PT'] }},
-                    {{ $overview['scoringBreakdown']['away']['1PT'] }}
+                    {{ $overview['shotAnalysis']['home']['made']['3PT'] }},
+                    {{ $overview['shotAnalysis']['home']['made']['2PT'] }},
+                    {{ $overview['shotAnalysis']['home']['made']['1PT'] }}
                 ],
-                backgroundColor: [
-                    homeColors['3PT'],
-                    homeColors['2PT'],
-                    homeColors['1PT'],
-                    awayColors['3PT'],
-                    awayColors['2PT'],
-                    awayColors['1PT']
+                backgroundColor: isHomeWinner ? 'rgba(40, 167, 69, 0.8)' : (isTie ? 'rgba(255, 193, 7, 0.8)' : 'rgba(220, 53, 69, 0.8)'),
+                borderColor: isHomeWinner ? 'rgba(40, 167, 69, 1)' : (isTie ? 'rgba(255, 193, 7, 1)' : 'rgba(220, 53, 69, 1)'),
+                borderWidth: 1
+            }, {
+                label: '{{ $overview['homeTeam'] }} Missed',
+                data: [
+                    {{ $overview['shotAnalysis']['home']['missed']['3PT'] }},
+                    {{ $overview['shotAnalysis']['home']['missed']['2PT'] }},
+                    {{ $overview['shotAnalysis']['home']['missed']['1PT'] }}
                 ],
-                borderColor: [
-                    homeBorderColors.border,
-                    homeBorderColors.border,
-                    homeBorderColors.border,
-                    awayBorderColors.border,
-                    awayBorderColors.border,
-                    awayBorderColors.border
+                backgroundColor: isHomeWinner ? 'rgba(40, 167, 69, 0.3)' : (isTie ? 'rgba(255, 193, 7, 0.3)' : 'rgba(220, 53, 69, 0.3)'),
+                borderColor: isHomeWinner ? 'rgba(40, 167, 69, 0.5)' : (isTie ? 'rgba(255, 193, 7, 0.5)' : 'rgba(220, 53, 69, 0.5)'),
+                borderWidth: 1
+            }, {
+                label: '{{ $overview['awayTeam'] }} Made',
+                data: [
+                    {{ $overview['shotAnalysis']['away']['made']['3PT'] }},
+                    {{ $overview['shotAnalysis']['away']['made']['2PT'] }},
+                    {{ $overview['shotAnalysis']['away']['made']['1PT'] }}
                 ],
-                borderWidth: 2
+                backgroundColor: isAwayWinner ? 'rgba(40, 167, 69, 0.8)' : (isTie ? 'rgba(255, 193, 7, 0.8)' : 'rgba(220, 53, 69, 0.8)'),
+                borderColor: isAwayWinner ? 'rgba(40, 167, 69, 1)' : (isTie ? 'rgba(255, 193, 7, 1)' : 'rgba(220, 53, 69, 1)'),
+                borderWidth: 1
+            }, {
+                label: '{{ $overview['awayTeam'] }} Missed',
+                data: [
+                    {{ $overview['shotAnalysis']['away']['missed']['3PT'] }},
+                    {{ $overview['shotAnalysis']['away']['missed']['2PT'] }},
+                    {{ $overview['shotAnalysis']['away']['missed']['1PT'] }}
+                ],
+                backgroundColor: isAwayWinner ? 'rgba(40, 167, 69, 0.3)' : (isTie ? 'rgba(255, 193, 7, 0.3)' : 'rgba(220, 53, 69, 0.3)'),
+                borderColor: isAwayWinner ? 'rgba(40, 167, 69, 0.5)' : (isTie ? 'rgba(255, 193, 7, 0.5)' : 'rgba(220, 53, 69, 0.5)'),
+                borderWidth: 1
             }]
         },
         options: {
@@ -472,31 +867,54 @@
                     right: 10
                 }
             },
+            scales: {
+                x: {
+                    stacked: false,
+                    ticks: {
+                        color: '#333'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                },
+                y: {
+                    stacked: false,
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        color: '#333'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                }
+            },
             plugins: {
                 legend: {
-                    position: 'bottom',
+                    position: 'top',
                     labels: {
-                        boxWidth: 12,
+                        color: '#333',
                         font: {
                             size: 10,
                             weight: 'bold'
                         },
-                        padding: 8,
-                        color: '#333'
+                        boxWidth: 12
                     }
                 },
                 title: {
                     display: true,
-                    text: 'Shot Distribution',
+                    text: 'Shot Attempts (Made vs Missed)',
                     color: '#333',
                     font: {
-                        size: 14,
+                        size: 12,
                         weight: 'bold'
                     }
                 }
             }
         }
     });
+
+    
 </script>
 @endpush
 @endsection

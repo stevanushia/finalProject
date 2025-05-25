@@ -25,9 +25,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/stats', [StatisticsController::class, 'index'])->name('stats'); // Alternative route
     
     // Game Overview routes
-    Route::get('/game-overview', [GameOverviewController::class, 'index'])->name('game.overview');
-    Route::get('/game/{gameId}/overview', [GameOverviewController::class, 'index'])->name('game.overview.specific');
     Route::get('/games', [GameOverviewController::class, 'listGames'])->name('game.list');
+    Route::get('/game/{gameId}/overview', [GameOverviewController::class, 'index'])->name('game.overview.specific');
+    Route::delete('/games/{gameId}/delete', [GameOverviewController::class, 'deleteGame'])->name('games.delete');    
 });
 
 Route::get('/create-team', function () {

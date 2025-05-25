@@ -128,9 +128,9 @@
                         <div class="rd-navbar-main-container container">
                             <!-- RD Navbar Nav-->
                             <ul class="rd-navbar-nav">
-                                <li class="rd-nav-item active"><a class="rd-nav-link" href="/">Home</a>
+                                <li class="rd-nav-item {{ request()->is('/') ? 'active' : '' }}"><a class="rd-nav-link" href="/">Home</a>
                                 </li>
-                                <li class="rd-nav-item"><a class="rd-nav-link"
+                                <li class="rd-nav-item {{ Route::is('game.list') || Route::is('game.overview.specific') ? 'active' : '' }}"><a class="rd-nav-link"
                                         href="{{ route('game.list') }}">Game
                                         overview</a>
                                 </li>

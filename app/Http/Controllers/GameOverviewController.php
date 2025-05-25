@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\FirebaseService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class GameOverviewController extends Controller
 {
@@ -35,7 +36,33 @@ class GameOverviewController extends Controller
     public function listGames()
     {
         // Fetch all game sessions from Firebase
-        $games = $this->firebase->getReference('game_sessions')->getValue();
+        $gamesData = $this->firebase->getReference('game_sessions')->getValue();
+        
+        // Handle case where no games exist or Firebase returns null
+        if (!$gamesData || !is_array($gamesData)) {
+            $games = [];
+        } else {
+            // Ensure each game has the expected structure
+            $games = [];
+            foreach ($gamesData as $gameId => $gameData) {
+                // Check if game_state exists, if not create a default structure
+                if (!isset($gameData['game_state'])) {
+                    $games[$gameId] = [
+                        'game_state' => [
+                            'sessionName' => 'Unknown Game',
+                            'homeTeamName' => 'HOME',
+                            'awayTeamName' => 'AWAY',
+                            'homeScore' => 0,
+                            'awayScore' => 0,
+                            'quarter' => 'Q1',
+                            'isMatchEnded' => false
+                        ]
+                    ];
+                } else {
+                    $games[$gameId] = $gameData;
+                }
+            }
+        }
         
         return view('pages.game-list', compact('games'));
     }
@@ -65,9 +92,9 @@ class GameOverviewController extends Controller
         $overview['scoringBreakdown'] = $this->processScoringEvents($scoringEvents);
         $overview['shotAnalysis'] = $this->processShotAnalysis($scoringEvents, $matchLogs);
         $overview['quarterPerformance'] = $this->processQuarterPerformance($scoringEvents);
-        $overview['playerStats'] = $this->processPlayerStats($scoringEvents);
+        $overview['playerStats'] = $this->processPlayerStats($scoringEvents, $gameData);
         $overview['teamComparison'] = $this->processTeamComparison($scoringEvents, $overview);
-        $overview['gameTimeline'] = $this->processGameTimeline($scoringEvents);
+        $overview['gameTimeline'] = $this->processCompleteGameTimeline($scoringEvents, $matchLogs);
 
         return $overview;
     }
@@ -118,37 +145,99 @@ class GameOverviewController extends Controller
         return $quarters;
     }
 
-    private function processPlayerStats($scoringEvents)
+    private function processPlayerStats($scoringEvents, $gameData = null)
     {
         $players = [];
+        
+        // Get player roster data if available
+        $playerRoster = [];
+        if ($gameData && isset($gameData['players'])) {
+            foreach (['HOME', 'AWAY'] as $teamNode) {
+                if (isset($gameData['players'][$teamNode])) {
+                    foreach ($gameData['players'][$teamNode] as $playerId => $playerData) {
+                        // Use player name as key for easier lookup
+                        $playerName = $playerData['name'] ?? 'Unknown';
+                        $playerRoster[$playerName] = [
+                            'team' => $teamNode, // Use the Firebase node name (HOME/AWAY)
+                            'jerseyNumber' => $playerData['jerseyNumber'] ?? null,
+                            'position' => $playerData['position'] ?? null,
+                            'height' => $playerData['height'] ?? null,
+                            'weight' => $playerData['weight'] ?? null,
+                            'age' => $playerData['age'] ?? null,
+                            'heightWeightDisplay' => $playerData['heightWeightDisplay'] ?? null
+                        ];
+                    }
+                }
+            }
+        }
 
+        // Process scoring events
         foreach ($scoringEvents as $event) {
-            $player = $event['player'] ?? 'Unknown';
-            $team = $event['team'] ?? 'HOME';
+            $playerName = $event['player'] ?? 'Unknown';
+            $eventTeam = $event['team'] ?? 'HOME'; // This should be HOME or AWAY from scoring events
             $points = $event['points'] ?? 0;
             $shotType = $event['shotType'] ?? '2PT';
 
-            // Map '1PT' to '1PT' for consistency
-            if ($shotType === '1PT') {
-                $shotType = '1PT';
-            }
+            // Initialize player if not exists
+            if (!isset($players[$playerName])) {
+                // Get roster info if available, otherwise use defaults
+                $rosterInfo = $playerRoster[$playerName] ?? [
+                    'team' => $eventTeam, // Use event team as fallback
+                    'jerseyNumber' => null,
+                    'position' => null,
+                    'height' => null,
+                    'weight' => null,
+                    'age' => null,
+                    'heightWeightDisplay' => null
+                ];
 
-            if (!isset($players[$player])) {
-                $players[$player] = [
-                    'name' => $player,
-                    'team' => $team,
+                $players[$playerName] = [
+                    'name' => $playerName,
+                    'team' => $rosterInfo['team'], // This should be HOME or AWAY
                     'points' => 0,
                     'shots' => ['3PT' => 0, '2PT' => 0, '1PT' => 0],
-                    'totalShots' => 0
+                    'totalShots' => 0,
+                    'jerseyNumber' => $rosterInfo['jerseyNumber'],
+                    'position' => $rosterInfo['position'],
+                    'height' => $rosterInfo['height'],
+                    'weight' => $rosterInfo['weight'],
+                    'age' => $rosterInfo['age'],
+                    'heightWeightDisplay' => $rosterInfo['heightWeightDisplay']
                 ];
             }
 
-            $players[$player]['points'] += $points;
-            $players[$player]['shots'][$shotType]++;
-            $players[$player]['totalShots']++;
+            // Add points and shots
+            $players[$playerName]['points'] += $points;
+            
+            // Ensure shot type exists in the shots array
+            if (!isset($players[$playerName]['shots'][$shotType])) {
+                $players[$playerName]['shots'][$shotType] = 0;
+            }
+            
+            $players[$playerName]['shots'][$shotType]++;
+            $players[$playerName]['totalShots']++;
         }
 
-        // Sort by points
+        // Add players from roster who didn't score (optional)
+        foreach ($playerRoster as $playerName => $rosterData) {
+            if (!isset($players[$playerName])) {
+                $players[$playerName] = [
+                    'name' => $playerName,
+                    'team' => $rosterData['team'], // HOME or AWAY
+                    'points' => 0,
+                    'shots' => ['3PT' => 0, '2PT' => 0, '1PT' => 0],
+                    'totalShots' => 0,
+                    'jerseyNumber' => $rosterData['jerseyNumber'],
+                    'position' => $rosterData['position'],
+                    'height' => $rosterData['height'],
+                    'weight' => $rosterData['weight'],
+                    'age' => $rosterData['age'],
+                    'heightWeightDisplay' => $rosterData['heightWeightDisplay']
+                ];
+            }
+        }
+
+        // Sort by points (descending)
         uasort($players, function($a, $b) {
             return $b['points'] - $a['points'];
         });
@@ -169,9 +258,9 @@ class GameOverviewController extends Controller
         $home['madeShots'] = ($homeShots['3PT'] ?? 0) + ($homeShots['2PT'] ?? 0) + ($homeShots['1PT'] ?? 0);
         $away['madeShots'] = ($awayShots['3PT'] ?? 0) + ($awayShots['2PT'] ?? 0) + ($awayShots['1PT'] ?? 0);
 
-        // Get total shot attempts from shot analysis
-        $home['totalShots'] = $overview['shotAnalysis']['home']['total'] ?? $home['madeShots'];
-        $away['totalShots'] = $overview['shotAnalysis']['away']['total'] ?? $away['madeShots'];
+        // Get total shot attempts from shot analysis - FIX: Access the 'total' key correctly
+        $home['totalShots'] = $overview['shotAnalysis']['home']['total']['total'] ?? $home['madeShots'];
+        $away['totalShots'] = $overview['shotAnalysis']['away']['total']['total'] ?? $away['madeShots'];
 
         // Calculate shooting efficiency as (made shots / total attempts) * 100
         $home['efficiency'] = $home['totalShots'] > 0 ? round(($home['madeShots'] / $home['totalShots']) * 100, 1) : 0;
@@ -180,76 +269,229 @@ class GameOverviewController extends Controller
         return compact('home', 'away');
     }
 
-    private function processGameTimeline($scoringEvents)
+    private function processCompleteGameTimeline($scoringEvents, $matchLogs)
     {
         $timeline = [];
-        $homeScore = 0;
-        $awayScore = 0;
 
+        // Process scoring events
         foreach ($scoringEvents as $event) {
-            $team = strtolower($event['team'] ?? 'home');
-            $points = $event['points'] ?? 0;
-            
-            if ($team === 'home') {
-                $homeScore += $points;
-            } else {
-                $awayScore += $points;
-            }
-
             $timeline[] = [
+                'type' => 'score',
                 'player' => $event['player'] ?? 'Unknown',
                 'team' => $event['team'] ?? 'HOME',
                 'quarter' => $event['quarter'] ?? 'Q1',
                 'shotType' => $event['shotType'] ?? '2PT',
-                'points' => $points,
-                'homeScore' => $homeScore,
-                'awayScore' => $awayScore,
-                'timestamp' => $event['timestamp'] ?? 0
+                'points' => $event['points'] ?? 0,
+                'timestamp' => $event['timestamp'] ?? 0,
+                'description' => ($event['player'] ?? 'Unknown') . ' scored ' . ($event['points'] ?? 0) . ' points (' . ($event['shotType'] ?? '2PT') . ')'
             ];
+        }
+
+        // Process match logs (non-scoring events)
+        foreach ($matchLogs as $log) {
+            $statType = $log['stat_type'] ?? 'unknown';
+            $player = $log['player'] ?? 'Unknown';
+            $team = $log['team'] ?? 'Unknown';
+            $quarter = $log['quarter'] ?? 'Q1';
+            $timestamp = $log['timestamp'] ?? 0;
+
+            // Skip scoring events as they're already processed above
+            if (in_array($statType, ['3PT', '2PT', '1PT'])) {
+                continue;
+            }
+
+            // Map stat_type to event type and create description
+            $eventType = $this->mapStatTypeToEventType($statType);
+            $description = $this->getEventDescription($eventType, $log);
+            
+            $timeline[] = [
+                'type' => $eventType,
+                'player' => $player,
+                'team' => $team,
+                'quarter' => $quarter,
+                'timestamp' => $timestamp,
+                'description' => $description,
+                'details' => $log // Include all log details for reference
+            ];
+        }
+
+        // Sort by timestamp to get chronological order
+        usort($timeline, function($a, $b) {
+            return ($a['timestamp'] ?? 0) - ($b['timestamp'] ?? 0);
+        });
+
+        // Calculate running scores for timeline display
+        $homeScore = 0;
+        $awayScore = 0;
+        
+        foreach ($timeline as &$event) {
+            if ($event['type'] === 'score') {
+                $team = strtolower($event['team']);
+                $points = $event['points'] ?? 0;
+                
+                if ($team === 'home') {
+                    $homeScore += $points;
+                } else {
+                    $awayScore += $points;
+                }
+            }
+            
+            // Set current score for all events
+            $event['homeScore'] = $homeScore;
+            $event['awayScore'] = $awayScore;
         }
 
         return $timeline;
     }
 
+    private function mapStatTypeToEventType($statType)
+    {
+        $mapping = [
+            'ASSIST' => 'assist',
+            'REBOUND' => 'rebound',
+            'STEAL' => 'steal',
+            'BLOCK' => 'block',
+            'TURNOVER' => 'turnover',
+            'FOUL' => 'foul',
+            '3PT MISS' => 'shot_miss',
+            '2PT MISS' => 'shot_miss',
+            '1PT MISS' => 'free_throw_miss',
+            // Add more mappings as needed
+        ];
+
+        return $mapping[$statType] ?? strtolower(str_replace(' ', '_', $statType));
+    }
+
+    private function getEventDescription($eventType, $log)
+    {
+        $player = $log['player'] ?? 'Unknown';
+        $team = $log['team'] ?? '';
+        $statType = $log['stat_type'] ?? '';
+        
+        switch ($eventType) {
+            case 'shot_miss':
+                // Determine shot type from stat_type
+                if (strpos($statType, '3PT') !== false) {
+                    return $player . ' missed a 3-pointer';
+                } elseif (strpos($statType, '2PT') !== false) {
+                    return $player . ' missed a 2-pointer';
+                }
+                return $player . ' missed a shot';
+            case 'free_throw_miss':
+                return $player . ' missed free throw';
+            case 'foul':
+                return $player . ' committed a foul';
+            case 'foul_received':
+                return $player . ' was fouled';
+            case 'timeout':
+                return $team . ' called a timeout';
+            case 'substitution':
+                return 'Substitution: ' . $player . ' ' . ($log['action'] ?? '');
+            case 'quarter_start':
+                return 'Quarter ' . ($log['quarter'] ?? '') . ' started';
+            case 'quarter_end':
+                return 'Quarter ' . ($log['quarter'] ?? '') . ' ended';
+            case 'game_start':
+                return 'Game started';
+            case 'game_end':
+                return 'Game ended';
+            case 'technical_foul':
+                return $player . ' received a technical foul';
+            case 'rebound':
+                return $player . ' got a rebound';
+            case 'assist':
+                return $player . ' made an assist';
+            case 'steal':
+                return $player . ' made a steal';
+            case 'block':
+                return $player . ' made a block';
+            case 'turnover':
+                return $player . ' committed a turnover';
+            default:
+                return $player . ' - ' . ucfirst(str_replace('_', ' ', $eventType));
+        }
+    }
+
     private function processShotAnalysis($scoringEvents, $matchLogs = [])
     {
         $analysis = [
-            'home' => ['made' => 0, 'total' => 0, 'percentage' => 0],
-            'away' => ['made' => 0, 'total' => 0, 'percentage' => 0]
+            'home' => [
+                'made' => ['3PT' => 0, '2PT' => 0, '1PT' => 0, 'total' => 0],
+                'missed' => ['3PT' => 0, '2PT' => 0, '1PT' => 0, 'total' => 0],
+                'total' => ['3PT' => 0, '2PT' => 0, '1PT' => 0, 'total' => 0],
+                'percentage' => ['3PT' => 0, '2PT' => 0, '1PT' => 0, 'overall' => 0]
+            ],
+            'away' => [
+                'made' => ['3PT' => 0, '2PT' => 0, '1PT' => 0, 'total' => 0],
+                'missed' => ['3PT' => 0, '2PT' => 0, '1PT' => 0, 'total' => 0],
+                'total' => ['3PT' => 0, '2PT' => 0, '1PT' => 0, 'total' => 0],
+                'percentage' => ['3PT' => 0, '2PT' => 0, '1PT' => 0, 'overall' => 0]
+            ]
         ];
 
         // Count made shots from scoring events
         foreach ($scoringEvents as $event) {
             $team = strtolower($event['team'] ?? 'home');
+            $shotType = $event['shotType'] ?? '2PT';
             
             if (isset($analysis[$team])) {
-                $analysis[$team]['made']++;
+                $analysis[$team]['made'][$shotType]++;
+                $analysis[$team]['made']['total']++;
             }
         }
 
-        // If you have miss events in matchLogs, count them here
-        // This is assuming miss events are stored separately in match_logs
+        // Count missed shots from match logs
         foreach ($matchLogs as $log) {
-            if (isset($log['eventType']) && $log['eventType'] === 'shot_miss') {
-                $team = strtolower($log['team'] ?? 'home');
-                if (isset($analysis[$team])) {
-                    // Don't increment made shots for misses
+            $statType = $log['stat_type'] ?? '';
+            $team = strtolower($log['team'] ?? 'home');
+            
+            if (strpos($statType, 'MISS') !== false && isset($analysis[$team])) {
+                if (strpos($statType, '3PT') !== false) {
+                    $analysis[$team]['missed']['3PT']++;
+                } elseif (strpos($statType, '2PT') !== false) {
+                    $analysis[$team]['missed']['2PT']++;
+                } elseif (strpos($statType, '1PT') !== false) {
+                    $analysis[$team]['missed']['1PT']++;
                 }
+                $analysis[$team]['missed']['total']++;
             }
         }
 
-        // For now, if no miss data is available, assume total attempts = made shots
-        // You'll need to modify this based on your actual data structure
-        foreach ($analysis as $team => &$stats) {
-            if ($stats['total'] == 0) {
-                $stats['total'] = $stats['made']; // This assumes 100% efficiency if no miss data
+        // Calculate totals and percentages
+        foreach (['home', 'away'] as $team) {
+            foreach (['3PT', '2PT', '1PT'] as $shotType) {
+                $made = $analysis[$team]['made'][$shotType];
+                $missed = $analysis[$team]['missed'][$shotType];
+                $total = $made + $missed;
+                
+                $analysis[$team]['total'][$shotType] = $total;
+                $analysis[$team]['percentage'][$shotType] = $total > 0 ? round(($made / $total) * 100, 1) : 0;
             }
             
-            if ($stats['total'] > 0) {
-                $stats['percentage'] = round(($stats['made'] / $stats['total']) * 100, 1);
-            }
+            // Overall totals
+            $analysis[$team]['total']['total'] = $analysis[$team]['made']['total'] + $analysis[$team]['missed']['total'];
+            $analysis[$team]['percentage']['overall'] = $analysis[$team]['total']['total'] > 0 ? 
+                round(($analysis[$team]['made']['total'] / $analysis[$team]['total']['total']) * 100, 1) : 0;
         }
 
         return $analysis;
+    }
+
+    public function deleteGame($gameId)
+    {
+        try {
+            // Delete the game session from Firebase
+            $this->firebase->getReference('game_sessions/' . $gameId)->remove();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Game session deleted successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete game session: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
