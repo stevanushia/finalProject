@@ -56,7 +56,13 @@
                                         <span class="link-icon-text">{{ Auth::user()->name }}</span>
                                     </a>
                                     <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="{{ route('login') }}">My Profile</a></li>
+                                        <li>
+                                            @auth
+                                                <a class="dropdown-item" href="{{ route('profile') }}">My Profile</a>
+                                            @else
+                                                <a class="dropdown-item" href="{{ route('login') }}">Login</a>
+                                            @endauth
+                                        </li>
                                         <li><a class="dropdown-item" href="">Create Team</a></li>
                                         <li>
                                             <form action="{{ route('logout') }}" method="POST">

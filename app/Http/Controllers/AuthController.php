@@ -125,6 +125,9 @@ class AuthController extends Controller
                 'firebase_login' => true,
                 'firebase_uid' => $uid,
             ]);
+
+            $request->session()->save(); // 👈 forces session to persist
+
             
             Log::info('Session after Firebase login:', [
                 'auth_check' => Auth::check(),

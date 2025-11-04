@@ -4,7 +4,8 @@
 
 @section('content')
 @php
-    dump(Auth::user())
+    dump(session()->all());
+    // dump(Auth::user())
 @endphp
         <!-- Swiper-->
         <section class="section swiper-container swiper-slider swiper-classic bg-gray-2" data-loop="true"

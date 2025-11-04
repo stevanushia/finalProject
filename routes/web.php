@@ -5,6 +5,7 @@ use App\Http\Controllers\FirebaseController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\GameOverviewController;
+use App\Http\Controllers\ProfileController;
 
 Route::get('/', function () {
     return view('pages.home');
@@ -28,7 +29,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/games', [GameOverviewController::class, 'listGames'])->name('game.list');
     Route::get('/game/{gameId}/overview', [GameOverviewController::class, 'index'])->name('game.overview.specific');
     Route::delete('/games/{gameId}/delete', [GameOverviewController::class, 'deleteGame'])->name('games.delete');    
+
+    // Profile route
 });
+Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
 
 Route::get('/create-team', function () {
     return view('pages.create-team');
