@@ -31,8 +31,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/games/{gameId}/delete', [GameOverviewController::class, 'deleteGame'])->name('games.delete');    
 
     // Profile route
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+
 });
-Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
 
 Route::get('/create-team', function () {
     return view('pages.create-team');

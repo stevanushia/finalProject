@@ -30,10 +30,10 @@
 
                     <div class="text-center mt-3">or</div>
 
-                    <button onclick="googleRegister()" class="btn btn-danger w-100 mt-2" id="googleBtn"><img class="image" data-alt-override="false" alt="G" srcset="
-                        https://www.gstatic.com/marketing-cms/assets/images/d5/dc/cfe9ce8b4425b410b49b7f2dd3f3/g.webp=s48-fcrop64=1,00000000ffffffff-rw 1x,
-                        https://www.gstatic.com/marketing-cms/assets/images/d5/dc/cfe9ce8b4425b410b49b7f2dd3f3/g.webp=s96-fcrop64=1,00000000ffffffff-rw 2x
-                      " width="30" height="30" loading="lazy" src="https://www.gstatic.com/marketing-cms/assets/images/d5/dc/cfe9ce8b4425b410b49b7f2dd3f3/g.webp=s48-fcrop64=1,00000000ffffffff-rw"> &nbsp;&nbsp;Sign Up with Google</button>
+                    <button onclick="googleRegister()" class="btn btn-danger w-100 mt-2" id="googleBtn">
+                        <img src="https://www.gstatic.com/marketing-cms/assets/images/d5/dc/cfe9ce8b4425b410b49b7f2dd3f3/g.webp" width="30" height="30" loading="lazy"> 
+                        &nbsp;&nbsp;Sign Up with Google
+                    </button>
 
                     <p class="text-center mt-4">
                         Already have an account? <a href="{{ route('login') }}">Login!</a>
@@ -49,7 +49,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script>
-    firebase.initializeApp{
+    // ✅ FIXED: Proper Firebase initialization
+    const firebaseConfig = {
         apiKey: "AIzaSyB2o8f5gcls6IxHPKaTMZVDdqtXur6gGWw",
         authDomain: "project-ta-df552.firebaseapp.com",
         databaseURL: "https://project-ta-df552-default-rtdb.firebaseio.com",
@@ -59,18 +60,24 @@
         appId: "1:205264169507:web:3f024ab34abde7dc8c1f96",
         measurementId: "G-MZZ72360VC"
     };
+    firebase.initializeApp(firebaseConfig);
 
     function registerWithEmail() {
-        const email = document.getElementById('register_email').value;
+        const email = document.getElementById('register_email').value.trim();
         const password = document.getElementById('register_password').value;
         const confirm = document.getElementById('register_confirm').value;
-        const name = document.getElementById('register_name').value;
+        const name = document.getElementById('register_name').value.trim();
 
-        if (password !== confirm) {
-            alert('Passwords do not match');
+        if (!email || !password || !confirm || !name) {
+            Swal.fire('Error', 'All fields are required', 'error');
             return;
         }
-        // 🔥 Show spinner right after clicking
+
+        if (password !== confirm) {
+            Swal.fire('Error', 'Passwords do not match', 'error');
+            return;
+        }
+
         document.getElementById('loadingSpinner').style.display = 'flex';
         document.getElementById('registerBtn').disabled = true;
 
@@ -91,75 +98,49 @@
                 });
             })
             .then(async response => {
-                const contentType = response.headers.get('content-type');
-                const data = contentType.includes('application/json')
-                    ? await response.json()
-                    : await response.text();
-
-                console.log('Registration Response:', data);
-                document.getElementById('loadingSpinner').style.display = 'flex';
-
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 200);
+                const data = await response.json();
+                Swal.fire('Success', 'Registration successful!', 'success');
+                setTimeout(() => window.location.href = '/', 1500);
             })
             .catch(error => {
-                document.getElementById('loadingSpinner').style.display = 'none';
-                alert('Register failed: ' + error.message);
-                
+                console.error(error);
+                Swal.fire('Error', error.message, 'error');
+            })
+            .finally(() => {
                 document.getElementById('loadingSpinner').style.display = 'none';
                 document.getElementById('registerBtn').disabled = false;
             });
     }
 
-    window.googleRegister = function () {
-        const csrf = document.querySelector('meta[name="csrf-token"]');
-        const token = csrf ? csrf.getAttribute('content') : null;
-
-        if (!token) {
-            alert('CSRF token not found!');
-            return;
-        }
-
-        
+    function googleRegister() {
+        const provider = new firebase.auth.GoogleAuthProvider();
         document.getElementById('loadingSpinner').style.display = 'flex';
         document.getElementById('googleBtn').disabled = true;
 
-        const provider = new firebase.auth.GoogleAuthProvider();
         firebase.auth().signInWithPopup(provider)
             .then(result => result.user.getIdToken())
-            .then(firebaseToken => {
+            .then(token => {
                 return fetch('/firebase-login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': token
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     },
                     credentials: 'same-origin',
-                    body: JSON.stringify({ token: firebaseToken })
+                    body: JSON.stringify({ token })
                 });
             })
-            .then(async response => {
-                const contentType = response.headers.get('content-type');
-                const data = contentType.includes('application/json')
-                    ? await response.json()
-                    : await response.text();
-
-                console.log('Google Register Response:', data);
-                document.getElementById('loadingSpinner').style.display = 'flex';
-                
-
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 200);
+            .then(() => {
+                Swal.fire('Success', 'Google registration successful!', 'success');
+                setTimeout(() => window.location.href = '/', 1500);
             })
             .catch(error => {
-                document.getElementById('loadingSpinner').style.display = 'none';
-                alert('Register failed: ' + error.message);
+                Swal.fire('Error', error.message, 'error');
+            })
+            .finally(() => {
                 document.getElementById('loadingSpinner').style.display = 'none';
                 document.getElementById('googleBtn').disabled = false;
             });
-    };
-    </script>
+    }
+</script>
 @endpush
-
