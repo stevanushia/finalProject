@@ -137,15 +137,13 @@
                                 <li class="rd-nav-item {{ request()->is('/') ? 'active' : '' }}"><a class="rd-nav-link" href="/">Home</a>
                                 </li>
                                 <li class="rd-nav-item {{ Route::is('game.list') || Route::is('game.overview.specific') ? 'active' : '' }}"><a class="rd-nav-link"
-                                        href="{{ route('game.list') }}">Game
-                                        overview</a>
-                                </li>
-                                <li class="rd-nav-item"><a class="rd-nav-link"
-                                        href="#">Contact
-                                        us</a>
+                                        href="{{ route('game.list') }}">Game overview</a>
                                 </li>
                                 <li class="rd-nav-item"><a class="rd-nav-link"
                                         href="#">Tournament</a>
+                                </li>
+                                <li class="rd-nav-item"><a class="rd-nav-link"
+                                        href="{{ route('subscription') }}">Subscription</a>
                                 </li>
                             </ul>
                             <div class="rd-navbar-main-element">

@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\GameOverviewController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SubscriptionController;
 
 Route::get('/', function () {
     return view('pages.home');
@@ -14,6 +15,8 @@ Route::get('/', function () {
 Route::get('/template', function () {
     return view('welcome');
 });
+
+Route::get('/subscription', [SubscriptionController::class, 'show'])->name('subscription');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
