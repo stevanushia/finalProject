@@ -11,7 +11,6 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
-    <!-- Custom Styles -->
     <style>
         body {
             background-color: #f8f9fa;
@@ -69,13 +68,21 @@
         </a>
     </div>
 
+    @php
+        use Carbon\Carbon;
+
+        $isPremium = !empty($subscription['subscriptionType']) && str_contains($subscription['subscriptionType'], 'premium');
+        $isExpired = isset($subscription['expiryDate']) && Carbon::createFromTimestampMs($subscription['expiryDate'])->isPast();
+    @endphp
+
     <!-- Profile Header -->
     <div class="container my-5">
         <div class="profile-header shadow position-relative">
             <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" class="profile-avatar" alt="User Avatar">
             <h2 class="mb-0">{{ $user->name ?? 'Player' }}</h2>
             <p class="lead">{{ $user->email }}</p>
-            @if(!empty($subscription['subscriptionType']) && str_contains($subscription['subscriptionType'], 'premium'))
+
+            @if($isPremium && !$isExpired)
                 <span class="badge badge-premium">PREMIUM</span>
             @else
                 <span class="badge bg-secondary">FREE USER</span>
@@ -117,13 +124,26 @@
                         @if(!empty($subscription))
                             @php
                                 $start = isset($subscription['startDate']) 
-                                    ? \Carbon\Carbon::createFromTimestampMs($subscription['startDate'])->toDayDateTimeString() 
+                                    ? Carbon::createFromTimestampMs($subscription['startDate'])->toDayDateTimeString() 
                                     : '-';
                                 $expiry = isset($subscription['expiryDate']) 
-                                    ? \Carbon\Carbon::createFromTimestampMs($subscription['expiryDate'])->toDayDateTimeString() 
+                                    ? Carbon::createFromTimestampMs($subscription['expiryDate'])->toDayDateTimeString() 
                                     : '-';
                             @endphp
-                            <p><strong>Status:</strong> {{ $subscription['active'] ? 'Active' : 'Inactive' }}</p>
+
+                            <p>
+                                <strong>Status:</strong>
+                                @if(!$isPremium)
+                                    Free Plan
+                                @elseif($isExpired)
+                                    <span class="text-danger">Expired</span>
+                                @elseif($subscription['active'])
+                                    <span class="text-success">Active</span>
+                                @else
+                                    <span class="text-warning">Inactive</span>
+                                @endif
+                            </p>
+
                             <p><strong>Type:</strong> {{ ucfirst(str_replace('_', ' ', $subscription['subscriptionType'])) }}</p>
                             <p><strong>Payment Method:</strong> {{ strtoupper($subscription['paymentMethod']) }}</p>
                             <p><strong>Start Date:</strong> {{ $start }}</p>
@@ -161,7 +181,7 @@
                                 <tr>
                                     <td>
                                         @if(!empty($t['timestamp']))
-                                            {{ \Carbon\Carbon::createFromTimestampMs($t['timestamp'])->toDayDateTimeString() }}
+                                            {{ Carbon::createFromTimestampMs($t['timestamp'])->toDayDateTimeString() }}
                                         @else
                                             {{ $t['date'] ?? '-' }}
                                         @endif
@@ -195,12 +215,10 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="text-center py-4 bg-light border-top mt-5">
         <small class="text-muted">&copy; {{ date('Y') }} MyGameStats. All rights reserved.</small>
     </footer>
 
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
