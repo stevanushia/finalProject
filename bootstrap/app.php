@@ -11,7 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        // ADD THIS LINE
+        $middleware->validateCsrfTokens(except: [
+            'midtrans/notification' // This tells Laravel to skip CSRF for this URL
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

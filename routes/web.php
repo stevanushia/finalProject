@@ -38,7 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
 
     // Subscription actions - require login
-    Route::post('/subscription/payment', [SubscriptionController::class, 'createPayment'])->name('subscription.payment');
+    Route::post('/subscription/payment', [SubscriptionController::class, 'createPayment'])->name('R');
     Route::post('/subscription/cancel', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
 });
 
