@@ -3,9 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Subscription Plans</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    @php
+    $midtrans_url = config('midtrans.is_production') 
+        ? 'https://app.midtrans.com/snap/snap.js' 
+        : 'https://app.sandbox.midtrans.com/snap/snap.js';
+    @endphp
+    <script src="{{ $midtrans_url }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -96,6 +103,11 @@
         .transaction-row:last-child {
             border-bottom: none;
         }
+        .badge-status {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 <body>
@@ -112,6 +124,21 @@
             <h1 class="display-4 fw-bold mb-2">Choose Your Plan</h1>
             <p class="lead">Unlock premium features and take your experience to the next level</p>
         </div>
+
+        <!-- Flash Messages -->
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
 
         <!-- Status Banner -->
         @if($active && !$isExpired)
@@ -235,19 +262,17 @@
                     </ul>
 
                     @if($active && !$isExpired)
-                        <form method="POST" action="">
+                        <form method="POST" action="{{ route('subscription.cancel') }}">
                             @csrf
-                            <button type="submit" class="btn btn-outline-danger btn-subscribe">
+                            <button type="submit" class="btn btn-outline-danger btn-subscribe" 
+                                    onclick="return confirm('Are you sure you want to cancel your subscription?')">
                                 <i class="fas fa-times me-2"></i>Cancel Subscription
                             </button>
                         </form>
                     @else
-                        <form method="POST" action="">
-                            @csrf
-                            <button type="submit" class="btn btn-warning btn-subscribe">
-                                <i class="fas fa-crown me-2"></i>Subscribe Now
-                            </button>
-                        </form>
+                        <button id="pay-button" class="btn btn-warning btn-subscribe">
+                            <i class="fas fa-crown me-2"></i>Subscribe Now
+                        </button>
                     @endif
                 </div>
             </div>
@@ -255,5 +280,48 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('pay-button')?.addEventListener('click', function () {
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+            
+            fetch('{{ route("subscription.payment") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.snap_token) {
+                    snap.pay(data.snap_token, {
+                        onSuccess: function(result) {
+                            window.location.href = '{{ route("subscription.show") }}?payment=success';
+                        },
+                        onPending: function(result) {
+                            window.location.href = '{{ route("subscription.show") }}?payment=pending';
+                        },
+                        onError: function(result) {
+                            alert('Payment failed. Please try again.');
+                            location.reload();
+                        },
+                        onClose: function() {
+                            document.getElementById('pay-button').disabled = false;
+                            document.getElementById('pay-button').innerHTML = '<i class="fas fa-crown me-2"></i>Subscribe Now';
+                        }
+                    });
+                } else {
+                    alert('Failed to initialize payment. Please try again.');
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+                location.reload();
+            });
+        });
+    </script>
 </body>
 </html>

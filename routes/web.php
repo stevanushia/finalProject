@@ -16,7 +16,8 @@ Route::get('/template', function () {
     return view('welcome');
 });
 
-Route::get('/subscription', [SubscriptionController::class, 'show'])->name('subscription');
+// Subscription page - accessible to everyone (guests can view)
+Route::get('/subscription', [SubscriptionController::class, 'show'])->name('subscription.show');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -36,6 +37,9 @@ Route::middleware('auth')->group(function () {
     // Profile route
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
 
+    // Subscription actions - require login
+    Route::post('/subscription/payment', [SubscriptionController::class, 'createPayment'])->name('subscription.payment');
+    Route::post('/subscription/cancel', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
 });
 
 Route::get('/create-team', function () {
@@ -47,6 +51,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/firebase-login', [AuthController::class, 'firebaseLogin']);
+
+// Midtrans notification webhook - NO AUTH, NO CSRF (called by Midtrans servers)
+Route::post('/midtrans/notification', [SubscriptionController::class, 'handleNotification'])->name('midtrans.notification');
 
 // Firebase test routes
 Route::get('/firebase/store', [FirebaseController::class, 'storeData']);

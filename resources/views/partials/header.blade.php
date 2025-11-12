@@ -143,7 +143,7 @@
                                         href="#">Tournament</a>
                                 </li>
                                 <li class="rd-nav-item"><a class="rd-nav-link"
-                                        href="{{ route('subscription') }}">Subscription</a>
+                                        href="{{ route('subscription.show') }}">Subscription</a>
                                 </li>
                             </ul>
                             <div class="rd-navbar-main-element">
