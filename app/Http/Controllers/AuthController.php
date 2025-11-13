@@ -24,7 +24,8 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('/home');
+            // Redirect to home, or use intended if you have specific logic
+            return redirect('/'); 
         }
 
         return back()->withErrors([
@@ -53,7 +54,8 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect('/home');
+        // Redirect to home after registration
+        return redirect('/'); 
     }
 
     public function logout(Request $request)
@@ -72,7 +74,6 @@ class AuthController extends Controller
                 'token_length' => $request->token ? strlen($request->token) : 0,
             ]);
 
-            // Validate that token is provided
             if (!$request->has('token') || empty($request->token)) {
                 Log::warning('Firebase token missing');
                 return response()->json([
@@ -81,53 +82,78 @@ class AuthController extends Controller
                 ], 400);
             }
 
-            $factory = (new Factory)->withServiceAccount(base_path('firebase_credentials.json'));
+            $factory = (new Factory)
+                ->withServiceAccount(base_path('firebase_credentials.json'))
+                ->withDatabaseUri('https://project-ta-df552-default-rtdb.firebaseio.com');   
+            
             $auth = $factory->createAuth();
+            
+            // Create a database instance as well
+            $database = $factory->createDatabase(); 
 
             // Verify the Firebase ID token
             $verifiedIdToken = $auth->verifyIdToken($request->token);
             $uid = $verifiedIdToken->claims()->get('sub');
             
-            // Get user information from Firebase
+            // Get user information from Firebase Auth
             $firebaseUser = $auth->getUser($uid);
             
+            // --- NEW SYNC LOGIC ---
+            // 1. Get user data from Realtime Database
+            $rtdbUser = $database->getReference('users/' . $uid)->getValue();
+            $rtdbName = $rtdbUser['displayName'] ?? null;
+
+            // 2. Get user data from Firebase Auth
+            $authName = $firebaseUser->displayName ?? $firebaseUser->email;
+
+            // 3. Decide which name is the "best" or "freshest"
+            // We'll prefer the Realtime Database name since that's what your app uses
+            $finalName = $rtdbName ?? $authName;
+            // --- END NEW SYNC LOGIC ---
+
             Log::info('Firebase User Data:', [
                 'uid' => $uid,
                 'email' => $firebaseUser->email,
-                'displayName' => $firebaseUser->displayName,
-                'emailVerified' => $firebaseUser->emailVerified,
+                'authName' => $authName,
+                'rtdbName' => $rtdbName,
+                'finalName' => $finalName
             ]);
 
-            // Find or create user in your database
+            // Find or create user in your local database
             $user = User::firstOrCreate(
                 ['email' => $firebaseUser->email],
                 [
-                    'name' => $firebaseUser->displayName ?? $firebaseUser->email,
-                    'password' => Hash::make(uniqid()), // Random password since they're using Firebase auth
+                    'name' => $finalName, // Use the "finalName" on creation
+                    'password' => Hash::make(uniqid()), 
                     'email_verified_at' => $firebaseUser->emailVerified ? now() : null,
                 ]
             );
 
+            // Sync name for EXISTING users
+            // If the user was *found* (not created) but their name is out of sync, update it
+            if ($user->wasRecentlyCreated === false && $user->name !== $finalName) {
+                $user->name = $finalName;
+                $user->save();
+                Log::info('Local user name synced on login.', ['user_id' => $user->id, 'new_name' => $finalName]);
+            }
+            
             Log::info('User found/created:', [
                 'user_id' => $user->id,
                 'user_email' => $user->email,
             ]);
 
             // Login the user using Laravel's authentication
-            Auth::login($user, true); // The 'true' parameter enables "remember me"
+            Auth::login($user, true); 
             
-            // Regenerate session for security
             $request->session()->regenerate();
             
-            // Set additional session data
             session([
                 'login_confirm' => 'yes',
                 'firebase_login' => true,
                 'firebase_uid' => $uid,
             ]);
 
-            $request->session()->save(); // 👈 forces session to persist
-
+            $request->session()->save(); 
             
             Log::info('Session after Firebase login:', [
                 'auth_check' => Auth::check(),
@@ -140,7 +166,7 @@ class AuthController extends Controller
                 'message' => 'Successfully logged in',
                 'user' => [
                     'id' => $user->id,
-                    'name' => $user->name,
+                    'name' => $user->name, // This will now be the correct, synced name
                     'email' => $user->email,
                 ],
                 'redirect_url' => '/'
