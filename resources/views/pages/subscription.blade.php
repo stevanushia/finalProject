@@ -24,6 +24,24 @@
             margin: 0 auto;
             padding: 3rem 1rem;
         }
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 2rem;
+        }
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            transform: translateX(-5px);
+        }
         .status-banner {
             background: white;
             border-radius: 15px;
@@ -119,6 +137,11 @@
     @endphp
 
     <div class="main-container">
+        <!-- Back Button -->
+        <a href="{{ url('/') }}" class="back-btn">
+            <i class="fas fa-arrow-left me-2"></i>Back to Home
+        </a>
+
         <!-- Header -->
         <div class="text-center text-white mb-5">
             <h1 class="display-4 fw-bold mb-2">Choose Your Plan</h1>
@@ -245,7 +268,7 @@
                         </li>
                         <li>
                             <i class="fas fa-check text-warning"></i>
-                            <span>Performance predictions AI</span>
+                            <span>Collaboration Input</span>
                         </li>
                         <li>
                             <i class="fas fa-check text-warning"></i>
@@ -254,10 +277,6 @@
                         <li>
                             <i class="fas fa-check text-warning"></i>
                             <span>Priority customer support</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-check text-warning"></i>
-                            <span>Ad-free experience</span>
                         </li>
                     </ul>
 

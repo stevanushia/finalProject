@@ -188,12 +188,6 @@
                     </div>
 
                     @if(!empty($firebaseUser))
-                    <div class="info-row">
-                        <div class="info-label">Firebase UID</div>
-                        <div class="info-value">
-                            <code style="font-size: 0.85rem;">{{ $firebaseUser->uid }}</code>
-                        </div>
-                    </div>
 
                     <div class="info-row">
                         <div class="info-label">Email Verification</div>
@@ -240,11 +234,6 @@
                         <div class="info-row">
                             <div class="info-label">Plan Type</div>
                             <div class="info-value">{{ ucfirst(str_replace('_', ' ', $subscription['subscriptionType'])) }}</div>
-                        </div>
-
-                        <div class="info-row">
-                            <div class="info-label">Payment Method</div>
-                            <div class="info-value">{{ strtoupper($subscription['paymentMethod']) }}</div>
                         </div>
 
                         <div class="info-row">
