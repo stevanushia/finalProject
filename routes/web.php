@@ -7,6 +7,7 @@ use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\GameOverviewController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\TournamentController;
 
 Route::get('/', function () {
     return view('pages.home');
@@ -40,6 +41,18 @@ Route::middleware('auth')->group(function () {
     // Subscription actions - require login
     Route::post('/subscription/payment', [SubscriptionController::class, 'createPayment'])->name('subscription.payment');
     Route::post('/subscription/cancel', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
+
+// Tournament Routes
+    Route::get('/tournaments', [TournamentController::class, 'index'])->name('tournaments.index');
+    Route::get('/tournaments/create', [TournamentController::class, 'create'])->name('tournaments.create');
+    Route::post('/tournaments', [TournamentController::class, 'store'])->name('tournaments.store');
+    Route::get('/tournaments/{id}', [TournamentController::class, 'show'])->name('tournaments.show');
+    
+    // UPDATE MATCH (Existing)
+    Route::post('/tournaments/{tournamentId}/match/{matchId}', [TournamentController::class, 'updateMatch'])->name('tournaments.match.update');
+    
+    // DELETE TOURNAMENT (New)
+    Route::delete('/tournaments/{id}', [TournamentController::class, 'destroy'])->name('tournaments.destroy');
 });
 
 Route::get('/create-team', function () {

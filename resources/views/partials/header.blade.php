@@ -140,7 +140,7 @@
                                         href="{{ route('game.list') }}">Game overview</a>
                                 </li>
                                 <li class="rd-nav-item"><a class="rd-nav-link"
-                                        href="#">Tournament</a>
+                                        href="{{ route('tournaments.index') }}">Tournament</a>
                                 </li>
                                 <li class="rd-nav-item"><a class="rd-nav-link"
                                         href="{{ route('subscription.show') }}">Subscription</a>
