@@ -45,26 +45,28 @@ class TournamentController extends Controller
      */
     public function store(Request $request)
     {
+        // 1. VALIDATION (This checks the input, but doesn't set the variable)
         $request->validate([
             'name' => 'required|string|max:255',
+            'start_date' => 'required|date|after_or_equal:today', // <--- The rule goes HERE
             'participant_count' => 'required|in:4,8,16',
             'teams' => 'required|array|min:4',
             'teams.*' => 'required|string|distinct'
         ]);
 
-        if (count($request->teams) != $request->participant_count) {
-            return back()->withErrors(['teams' => 'Number of teams must match the participant count.']);
-        }
+        // ... (team count check) ...
 
         $firebaseUid = session('firebase_uid');
         if (!$firebaseUid) return redirect('/login')->with('error', 'Session expired.');
 
         $tournamentId = uniqid('trn_');
-        $teams = array_values($request->teams); // Re-index array
-        
-        // Generate Bracket Logic
+        $teams = array_values($request->teams); 
         $matches = $this->generateBracket($teams, $request->participant_count);
 
+        // 2. CONVERT DATE (Calculate the timestamp)
+        $startDateTimestamp = \Carbon\Carbon::parse($request->start_date)->getTimestampMs();
+
+        // 3. SAVE DATA
         $tournamentData = [
             'id' => $tournamentId,
             'name' => $request->name,
@@ -72,10 +74,16 @@ class TournamentController extends Controller
             'status' => 'upcoming',
             'type' => 'single_elimination',
             'participantCount' => (int)$request->participant_count,
-            'startDate' => Carbon::now()->getTimestampMs(),
+            
+            // This is when the tournament BEGINS (User selected)
+            'startDate' => $startDateTimestamp, 
+            
+            // ✅ NEW: This is when you clicked "Generate Bracket" (Now)
+            'createdAt' => \Carbon\Carbon::now()->getTimestampMs(), 
+            
             'teams' => $teams,
             'matches' => $matches,
-            'winner' => null 
+            'winner' => null
         ];
 
         try {

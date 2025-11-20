@@ -74,13 +74,25 @@
                             <div class="mb-3 p-2 bg-white rounded border text-center">
                                 <small class="text-muted d-block">Est. Start Date</small>
                                 <div class="fw-bold text-dark">
-                                    {{ \Carbon\Carbon::createFromTimestampMs($t['startDate'])->format('M d, Y') }}
+                                    {{-- SAFE DATE CHECK --}}
+                                    @if(!empty($t['startDate']))
+                                        {{ \Carbon\Carbon::createFromTimestampMs($t['startDate'])->format('M d, Y') }}
+                                    @else
+                                        <span class="text-muted fst-italic">TBD</span>
+                                    @endif
                                 </div>
                             </div>
                         @endif
 
                         <p class="text-muted small mb-0 text-end">
-                            <i class="fas fa-clock me-1"></i> Created: {{ \Carbon\Carbon::createFromTimestampMs($t['startDate'])->diffForHumans() }}
+                            <i class="fas fa-clock me-1"></i> Created: 
+                            @if(!empty($t['createdAt']))
+                                {{-- Use the actual creation time --}}
+                                {{ \Carbon\Carbon::createFromTimestampMs($t['createdAt'])->diffForHumans() }}
+                            @else
+                                {{-- Fallback for old data that didn't have this field --}}
+                                Recently
+                            @endif
                         </p>
                     </div>
                     <div class="card-footer bg-white border-0 pt-0 pb-3">
