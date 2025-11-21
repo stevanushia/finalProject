@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FirebaseController;
 use App\Http\Controllers\AuthController;
@@ -8,6 +9,8 @@ use App\Http\Controllers\GameOverviewController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TournamentController;
+use App\Http\Middleware\IsAdmin;
+use App\Http\Middleware\IsFirebaseAdmin;
 
 Route::get('/', function () {
     return view('pages.home');
@@ -53,6 +56,14 @@ Route::middleware('auth')->group(function () {
     
     // DELETE TOURNAMENT (New)
     Route::delete('/tournaments/{id}', [TournamentController::class, 'destroy'])->name('tournaments.destroy');
+
+    Route::middleware(['auth', IsFirebaseAdmin::class])->prefix('admin')->name('admin.')->group(function () {
+    
+        // Main Dashboard
+        Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+        
+        // You can add more admin routes here later
+    });
 });
 
 Route::get('/create-team', function () {

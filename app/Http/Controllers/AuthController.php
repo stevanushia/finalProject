@@ -99,9 +99,13 @@ class AuthController extends Controller
             $firebaseUser = $auth->getUser($uid);
             
             // --- NEW SYNC LOGIC ---
+            // --- NEW SYNC LOGIC ---
             // 1. Get user data from Realtime Database
             $rtdbUser = $database->getReference('users/' . $uid)->getValue();
             $rtdbName = $rtdbUser['displayName'] ?? null;
+            
+            // NEW: Get Admin Status
+            $isAdmin = $rtdbUser['isAdmin'] ?? false; 
 
             // 2. Get user data from Firebase Auth
             $authName = $firebaseUser->displayName ?? $firebaseUser->email;
@@ -151,6 +155,7 @@ class AuthController extends Controller
                 'login_confirm' => 'yes',
                 'firebase_login' => true,
                 'firebase_uid' => $uid,
+                'firebase_is_admin' => $isAdmin, // <--- THIS IS THE KEY CHANGE
             ]);
 
             $request->session()->save(); 
