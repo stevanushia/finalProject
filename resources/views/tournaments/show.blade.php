@@ -249,7 +249,7 @@
     <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-dark text-white py-2">
-                <h6 class="modal-title fw-bold" id="rosterTeamName">Team Roster</h6>
+                <h6 class="modal-title fw-bold" style="color: white" id="rosterTeamName">Team Roster</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-0">
