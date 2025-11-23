@@ -35,16 +35,27 @@ class GameOverviewController extends Controller
 
     public function listGames()
     {
+        // Get the current logged-in user's Firebase UID
+        $currentUid = session('firebase_uid');
+
         // Fetch all game sessions from Firebase
         $gamesData = $this->firebase->getReference('game_sessions')->getValue();
         
-        // Handle case where no games exist or Firebase returns null
-        if (!$gamesData || !is_array($gamesData)) {
-            $games = [];
-        } else {
-            // Ensure each game has the expected structure
-            $games = [];
+        $games = [];
+
+        if ($gamesData && is_array($gamesData)) {
             foreach ($gamesData as $gameId => $gameData) {
+                
+                // --- SECURITY FILTER ---
+                // 1. Get the creator's UID for this game
+                $creatorUid = $gameData['game_state']['creatorUid'] ?? null;
+
+                // 2. Skip this game if the current user is NOT the creator
+                if ($creatorUid !== $currentUid) {
+                    continue; 
+                }
+                // -----------------------
+
                 // Check if game_state exists, if not create a default structure
                 if (!isset($gameData['game_state'])) {
                     $games[$gameId] = [

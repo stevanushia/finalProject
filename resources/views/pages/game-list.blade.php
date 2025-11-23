@@ -12,7 +12,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-8">
                         <h1 class="display-5 mb-2 text-white">Game Sessions</h1>
-                        <p class="lead mb-0 text-white">Browse all basketball game sessions and their status</p>
+                        <p class="lead mb-0 text-white">Browse all of your basketball game sessions and their status</p>
                     </div>
                     <div class="col-md-4 text-end">
                         <div class="btn-group" role="group" aria-label="Filter games">

@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="row g-4 mb-4">
-    <div class="col-md-3">
+    <div class="col-md-4">
         <div class="card border-0 shadow-sm border-start border-4 border-success h-100">
             <div class="card-body">
                 <small class="text-muted fw-bold text-uppercase">Total Revenue</small>
@@ -13,15 +13,17 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+
+    <div class="col-md-4">
         <div class="card border-0 shadow-sm border-start border-4 border-primary h-100">
             <div class="card-body">
-                <small class="text-muted fw-bold text-uppercase">Transactions</small>
+                <small class="text-muted fw-bold text-uppercase">Total Transactions</small>
                 <h3 class="fw-bold text-dark mb-0">{{ number_format($data['summary']['total_txns']) }}</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+
+    <div class="col-md-4">
         <div class="card border-0 shadow-sm border-start border-4 border-info h-100">
             <div class="card-body">
                 <small class="text-muted fw-bold text-uppercase">Success Rate</small>
@@ -29,14 +31,8 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm border-start border-4 border-warning h-100">
-            <div class="card-body">
-                <small class="text-muted fw-bold text-uppercase">Avg. Transaction</small>
-                <h3 class="fw-bold text-dark mb-0">Rp {{ number_format($data['summary']['avg_ticket'], 0, ',', '.') }}</h3>
-            </div>
-        </div>
-    </div>
+    
+    {{-- REMOVED: Avg. Transaction Card --}}
 </div>
 
 <div class="row g-4 mb-4">

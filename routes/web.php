@@ -12,9 +12,7 @@ use App\Http\Controllers\TournamentController;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\IsFirebaseAdmin;
 
-Route::get('/', function () {
-    return view('pages.home');
-});
+Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 Route::get('/template', function () {
     return view('welcome');
