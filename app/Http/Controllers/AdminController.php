@@ -181,4 +181,242 @@ class AdminController extends Controller
             return back()->with('error', 'Failed to generate financial report.');
         }
     }
+
+    /**
+     * User Reports Page
+     */
+    public function userReports()
+    {
+        try {
+            // 1. Fetch Users
+            $users = $this->database->getReference('users')->getValue() ?? [];
+            
+            // Initialize Counters
+            $totalUsers = count($users);
+            $premiumUsers = 0;
+            $freeUsers = 0;
+            $admins = 0;
+            $activeRecently = 0; // Users active in last 30 days
+
+            $tableData = [];
+
+            // 2. Process Data
+            foreach ($users as $uid => $user) {
+                $isPremium = $user['isPremium'] ?? false;
+                $isAdmin = $user['isAdmin'] ?? false;
+                $lastUpdated = $user['lastUpdated'] ?? 0;
+
+                // Counters
+                if ($isPremium) $premiumUsers++;
+                else $freeUsers++;
+
+                if ($isAdmin) $admins++;
+
+                // Check activity (Last 30 days)
+                // Timestamp is in ms
+                $thirtyDaysAgo = \Carbon\Carbon::now()->subDays(30)->getTimestampMs();
+                if ($lastUpdated > $thirtyDaysAgo) {
+                    $activeRecently++;
+                }
+
+                // Prepare Table Row Data
+                $tableData[] = [
+                    'uid' => $uid,
+                    'name' => $user['displayName'] ?? 'Unknown',
+                    'email' => $user['email'] ?? '-',
+                    'role' => $isAdmin ? 'Admin' : 'User',
+                    'status' => $isPremium ? 'Premium' : 'Free',
+                    'last_active' => $lastUpdated
+                ];
+            }
+
+            $data = [
+                'counts' => [
+                    'total' => $totalUsers,
+                    'premium' => $premiumUsers,
+                    'admins' => $admins,
+                    'active' => $activeRecently
+                ],
+                'charts' => [
+                    'status' => [
+                        'labels' => ['Premium', 'Free'],
+                        'data' => [$premiumUsers, $freeUsers]
+                    ]
+                ],
+                'table' => $tableData
+            ];
+
+            return view('admin.reports.users', compact('data'));
+
+        } catch (\Exception $e) {
+            report($e);
+            return back()->with('error', 'Failed to generate user report.');
+        }
+    }
+
+    /**
+     * Game Session Reports Page
+     */
+    public function gameReports()
+    {
+        try {
+            // 1. Fetch Games
+            $games = $this->database->getReference('game_sessions')->getValue() ?? [];
+            
+            // Initialize Counters
+            $totalGames = count($games);
+            $completedGames = 0;
+            $activeGames = 0;
+            $totalPointsScored = 0;
+            $highestScore = 0;
+
+            $tableData = [];
+
+            // 2. Process Data
+            foreach ($games as $id => $session) {
+                $state = $session['game_state'] ?? [];
+                
+                $isEnded = $state['isMatchEnded'] ?? false;
+                $homeScore = (int)($state['homeScore'] ?? 0);
+                $awayScore = (int)($state['awayScore'] ?? 0);
+                $totalMatchScore = $homeScore + $awayScore;
+
+                // Counters
+                if ($isEnded) {
+                    $completedGames++;
+                    $totalPointsScored += $totalMatchScore;
+                    if ($totalMatchScore > $highestScore) {
+                        $highestScore = $totalMatchScore;
+                    }
+                } else {
+                    $activeGames++;
+                }
+
+                // Try to find a "date" (using logs if available, otherwise null)
+                $lastLogTimestamp = null;
+                if (isset($session['game_logs']['match_logs'])) {
+                    // Get the last log to approximate game time
+                    $lastLog = end($session['game_logs']['match_logs']);
+                    $lastLogTimestamp = $lastLog['timestamp'] ?? null;
+                }
+
+                // Prepare Table Row
+                $tableData[] = [
+                    'id' => $id,
+                    'name' => $state['sessionName'] ?? 'Untitled Game',
+                    'home' => $state['homeTeamName'] ?? 'HOME',
+                    'away' => $state['awayTeamName'] ?? 'AWAY',
+                    'score' => "{$homeScore} - {$awayScore}",
+                    'status' => $isEnded ? 'Completed' : 'In Progress',
+                    'timestamp' => $lastLogTimestamp // Can be null
+                ];
+            }
+
+            // Sort table by latest activity (timestamp)
+            usort($tableData, fn($a, $b) => ($b['timestamp'] ?? 0) <=> ($a['timestamp'] ?? 0));
+
+            $avgScore = $completedGames > 0 ? round($totalPointsScored / $completedGames) : 0;
+
+            $data = [
+                'counts' => [
+                    'total' => $totalGames,
+                    'completed' => $completedGames,
+                    'active' => $activeGames,
+                    'avg_score' => $avgScore,
+                    'high_score' => $highestScore
+                ],
+                'charts' => [
+                    'status' => [
+                        'labels' => ['Completed', 'In Progress'],
+                        'data' => [$completedGames, $activeGames]
+                    ]
+                ],
+                'table' => $tableData
+            ];
+
+            return view('admin.reports.games', compact('data'));
+
+        } catch (\Exception $e) {
+            report($e);
+            return back()->with('error', 'Failed to generate game report.');
+        }
+    }
+
+    /**
+     * Tournament Reports Page
+     */
+    public function tournamentReports()
+    {
+        try {
+            // 1. Fetch Tournaments
+            $tournaments = $this->database->getReference('tournaments')->getValue() ?? [];
+            
+            // Initialize Counters
+            $totalTournaments = count($tournaments);
+            $completed = 0;
+            $upcoming = 0;
+            $totalTeams = 0;
+            $mostPopularSize = [4 => 0, 8 => 0, 16 => 0];
+
+            $tableData = [];
+
+            // 2. Process Data
+            foreach ($tournaments as $id => $t) {
+                $status = $t['status'] ?? 'upcoming';
+                $count = (int)($t['participantCount'] ?? 0);
+                
+                // Update Counters
+                if ($status === 'completed') $completed++;
+                else $upcoming++; // Counts 'upcoming' and 'ongoing' together for simplicity
+
+                $totalTeams += $count;
+
+                // Track Size Popularity
+                if (isset($mostPopularSize[$count])) {
+                    $mostPopularSize[$count]++;
+                }
+
+                // Prepare Table Data
+                $tableData[] = [
+                    'id' => $id,
+                    'name' => $t['name'] ?? 'Untitled',
+                    'teams' => $count,
+                    'status' => $status,
+                    'winner' => $t['winner'] ?? '-',
+                    'start_date' => $t['startDate'] ?? null,
+                    'created_at' => $t['createdAt'] ?? null
+                ];
+            }
+
+            // Determine most popular format
+            $popularFormat = array_keys($mostPopularSize, max($mostPopularSize))[0] ?? 8;
+
+            $data = [
+                'counts' => [
+                    'total' => $totalTournaments,
+                    'completed' => $completed,
+                    'active' => $upcoming,
+                    'total_participants' => $totalTeams,
+                    'popular_format' => $popularFormat
+                ],
+                'charts' => [
+                    'status' => [
+                        'labels' => ['Completed', 'Active/Upcoming'],
+                        'data' => [$completed, $upcoming]
+                    ],
+                    'sizes' => [
+                        'labels' => ['4 Teams', '8 Teams', '16 Teams'],
+                        'data' => array_values($mostPopularSize)
+                    ]
+                ],
+                'table' => $tableData
+            ];
+
+            return view('admin.reports.tournaments', compact('data'));
+
+        } catch (\Exception $e) {
+            report($e);
+            return back()->with('error', 'Failed to generate tournament report.');
+        }
+    }
 }

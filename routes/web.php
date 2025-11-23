@@ -63,6 +63,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
         Route::get('/reports/financial', [AdminController::class, 'financialReports'])->name('reports.financial');
+
+        Route::get('/reports/users', [AdminController::class, 'userReports'])->name('reports.users');
+
+        Route::get('/reports/games', [AdminController::class, 'gameReports'])->name('reports.games');
+
+        Route::get('/reports/tournaments', [AdminController::class, 'tournamentReports'])->name('reports.tournaments');
         
         // You can add more admin routes here later
     });

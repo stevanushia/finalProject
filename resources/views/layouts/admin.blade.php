@@ -148,6 +148,18 @@
         <a href="{{ route('admin.reports.financial') }}" class="{{ request()->routeIs('admin.reports.financial') ? 'active' : '' }}">
             <i class="fas fa-chart-line"></i> Financial Report
         </a>
+
+        <a href="{{ route('admin.reports.users') }}" class="{{ request()->routeIs('admin.reports.users') ? 'active' : '' }}">
+            <i class="fas fa-users"></i> User Report
+        </a>
+
+        <a href="{{ route('admin.reports.games') }}" class="{{ request()->routeIs('admin.reports.games') ? 'active' : '' }}">
+            <i class="fas fa-basketball-ball"></i> Game Report
+        </a>
+
+        <a href="{{ route('admin.reports.tournaments') }}" class="{{ request()->routeIs('admin.reports.tournaments') ? 'active' : '' }}">
+            <i class="fas fa-trophy"></i> Tournament Report
+        </a>
     </div>
 
     <div class="p-3 border-top border-secondary">
