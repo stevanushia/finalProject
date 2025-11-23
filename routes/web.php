@@ -61,6 +61,8 @@ Route::middleware('auth')->group(function () {
     
         // Main Dashboard
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+
+        Route::get('/reports/financial', [AdminController::class, 'financialReports'])->name('reports.financial');
         
         // You can add more admin routes here later
     });

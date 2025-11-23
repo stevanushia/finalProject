@@ -122,13 +122,13 @@
     </div>
     
     <div class="sidebar-menu">
-        <small class="text-uppercase px-4 text-muted fw-bold mb-2 d-block" style="font-size: 0.7rem; letter-spacing: 1px;">Analytics</small>
+        <small class="text-uppercase px-4 fw-bold mb-2 d-block" style="font-size: 0.7rem; letter-spacing: 1px; color">Analytics</small>
         
         <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
             <i class="fas fa-th-large"></i> Dashboard
         </a>
 
-        <small class="text-uppercase px-4 text-muted fw-bold mt-4 mb-2 d-block" style="font-size: 0.7rem; letter-spacing: 1px;">Management</small>
+        <small class="text-uppercase px-4 fw-bold mt-4 mb-2 d-block" style="font-size: 0.7rem; letter-spacing: 1px;">Management</small>
         
         <a href="{{ route('tournaments.index') }}">
             <i class="fas fa-trophy"></i> Tournaments
@@ -141,6 +141,12 @@
         {{-- Placeholder for future features --}}
         <a href="#">
             <i class="fas fa-users"></i> Users <span class="badge bg-secondary ms-auto" style="font-size: 0.6rem;">SOON</span>
+        </a>
+
+        <small class="text-uppercase px-4 fw-bold mt-4 mb-2 d-block" style="font-size: 0.7rem; letter-spacing: 1px;">Reports</small>
+        
+        <a href="{{ route('admin.reports.financial') }}" class="{{ request()->routeIs('admin.reports.financial') ? 'active' : '' }}">
+            <i class="fas fa-chart-line"></i> Financial Report
         </a>
     </div>
 
@@ -170,7 +176,7 @@
         <div class="d-flex align-items-center">
             <div class="text-end me-3 d-none d-sm-block">
                 <div class="fw-bold text-dark">{{ Auth::user()->name ?? 'Admin' }}</div>
-                <div class="small text-muted" style="font-size: 0.75rem;">Administrator</div>
+                <div class="small" style="font-size: 0.75rem;">Administrator</div>
             </div>
             <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 40px; height: 40px;">
                 {{ substr(Auth::user()->name ?? 'A', 0, 1) }}

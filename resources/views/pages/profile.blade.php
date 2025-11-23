@@ -256,7 +256,7 @@
         </div>
 
         <!-- Transaction History -->
-        <div class="transaction-card">
+        {{-- <div class="transaction-card">
             <h4 class="fw-bold mb-4">
                 <i class="fas fa-receipt me-2"></i>Transaction History
                 <small class="text-muted ms-2">({{ is_iterable($transactions) ? count($transactions) : 0 }} records)</small>
@@ -318,7 +318,7 @@
                     <p class="text-muted">Your transaction history will appear here</p>
                 </div>
             @endif
-        </div>
+        </div> --}}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
