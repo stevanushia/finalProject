@@ -326,37 +326,69 @@
                             
                             <div class="tab-pane fade show active" id="home-players" role="tabpanel" aria-labelledby="home-tab">
                                 @if(count($homePlayers) > 0)
-                                    <div class="table-responsive p-3">
-                                        <table class="table table-striped table-hover table-bordered shadow-sm bg-white align-middle">
-                                            <thead class="table-dark text-uppercase">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover table-bordered align-middle mb-0" style="font-size: 0.85rem;">
+                                            <thead class="table-dark text-center text-uppercase">
                                                 <tr>
-                                                    <th scope="col" style="width: 5%;">#</th>
-                                                    <th scope="col" style="width: 30%;">Name</th>
-                                                    <th scope="col" style="width: 10%;">Pos</th>
-                                                    <th scope="col" class="text-center" style="width: 10%;">PTS</th>
-                                                    <th scope="col" class="text-center" style="width: 10%;">3PT</th>
-                                                    <th scope="col" class="text-center" style="width: 10%;">2PT</th>
-                                                    <th scope="col" class="text-center" style="width: 10%;">FT</th>
-                                                    <th scope="col" style="width: 15%;">Other</th>
+                                                    <th class="py-2">#</th>
+                                                    <th class="py-2 text-start">Player</th>
+                                                    <th class="py-2">Pos</th>
+                                                    <th class="py-2 bg-secondary">PTS</th>
+                                                    <th class="py-2">FG</th>
+                                                    <th class="py-2 text-muted">%</th>
+                                                    <th class="py-2">2PT</th>
+                                                    <th class="py-2 text-muted">%</th>
+                                                    <th class="py-2">3PT</th>
+                                                    <th class="py-2 text-muted">%</th>
+                                                    <th class="py-2">FT</th>
+                                                    <th class="py-2 text-muted">%</th>
+                                                    <th class="py-2">AST</th>
+                                                    <th class="py-2">REB</th>
+                                                    <th class="py-2">STL</th>
+                                                    <th class="py-2">BLK</th>
+                                                    <th class="py-2">TO</th>
+                                                    <th class="py-2">PF</th>
+                                                    <th class="py-2 bg-primary">PIR</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @foreach($homePlayers as $player)
-                                                <tr>
-                                                    <th scope="row">{{ $player['jerseyNumber'] ?? '-' }}</th>
-                                                    <td class="fw-bold">{{ $player['name'] }}</td>
-                                                    <td>{{ $player['position'] ?? '-' }}</td>
-                                                    <td class="fw-bold text-center fs-5">{{ $player['points'] }}</td>
-                                                    <td class="text-center">{{ $player['shots']['3PT'] }}</td>
-                                                    <td class="text-center">{{ $player['shots']['2PT'] }}</td>
-                                                    <td class="text-center">{{ $player['shots']['1PT'] }}</td>
-                                                    <td class="small">
-                                                        @if($player['age'])
-                                                            <div>Age: {{ $player['age'] }}</div>
-                                                        @endif
-                                                        @if($player['heightWeightDisplay'])
-                                                            <div>{{ $player['heightWeightDisplay'] }}</div>
-                                                        @endif
+                                                @php $s = $player['stats']; @endphp
+                                                <tr class="text-center">
+                                                    <td class="fw-bold">{{ $player['jerseyNumber'] }}</td>
+                                                    <td class="text-start fw-bold text-nowrap">{{ $player['name'] }}</td>
+                                                    <td>{{ $player['position'] }}</td>
+                                                    
+                                                    {{-- POINTS (Highlighted) --}}
+                                                    <td class="fw-bold bg-light border-start border-end">{{ $s['PTS'] }}</td>
+                                                    
+                                                    {{-- FG --}}
+                                                    <td>{{ $s['FG_M'] }}/{{ $s['FG_A'] }}</td>
+                                                    <td class="text-muted small">{{ $s['FG%'] }}</td>
+                                                    
+                                                    {{-- 2PT --}}
+                                                    <td>{{ $s['2PT_M'] }}/{{ $s['2PT_A'] }}</td>
+                                                    <td class="text-muted small">{{ $s['2PT%'] }}</td>
+                                                    
+                                                    {{-- 3PT --}}
+                                                    <td>{{ $s['3PT_M'] }}/{{ $s['3PT_A'] }}</td>
+                                                    <td class="text-muted small">{{ $s['3PT%'] }}</td>
+                                                    
+                                                    {{-- FT --}}
+                                                    <td>{{ $s['FT_M'] }}/{{ $s['FT_A'] }}</td>
+                                                    <td class="text-muted small">{{ $s['FT%'] }}</td>
+                                                    
+                                                    {{-- OTHER STATS --}}
+                                                    <td class="{{ $s['AST'] > 0 ? 'fw-bold text-dark' : 'text-muted' }}">{{ $s['AST'] }}</td>
+                                                    <td class="{{ $s['REB'] > 0 ? 'fw-bold text-dark' : 'text-muted' }}">{{ $s['REB'] }}</td>
+                                                    <td class="{{ $s['STL'] > 0 ? 'fw-bold text-dark' : 'text-muted' }}">{{ $s['STL'] }}</td>
+                                                    <td class="{{ $s['BLK'] > 0 ? 'fw-bold text-dark' : 'text-muted' }}">{{ $s['BLK'] }}</td>
+                                                    <td class="{{ $s['TO'] > 0 ? 'text-danger' : 'text-muted' }}">{{ $s['TO'] }}</td>
+                                                    <td class="{{ $s['FOUL'] > 0 ? 'text-danger' : 'text-muted' }}">{{ $s['FOUL'] }}</td>
+                                                    
+                                                    {{-- PIR (Highlighted) --}}
+                                                    <td class="fw-bold text-white {{ $s['PIR'] >= 20 ? 'bg-success' : ($s['PIR'] >= 10 ? 'bg-info' : 'bg-secondary') }}">
+                                                        {{ $s['PIR'] }}
                                                     </td>
                                                 </tr>
                                                 @endforeach
@@ -499,14 +531,15 @@
                                     </div>
                                     <small class="{{ $eventTextClass }} fw-semibold">
                                         @if($event['type'] === 'score')
-                                            {{ $event['shotType'] }} - {{ $event['points'] }} points
+                                            {{-- SAFE CHECK: Use default values if keys are missing --}}
+                                            {{ $event['shotType'] ?? '2PT' }} - {{ $event['points'] ?? 0 }} points
                                         @else
-                                            {{ ucfirst(str_replace('_', ' ', $event['type'])) }}
+                                            {{ ucfirst(str_replace('_', ' ', $event['type'] ?? 'Event')) }}
                                         @endif
                                     </small>
                                 </div>
                                 <div class="flex-shrink-0">
-                                    <div class="fw-bold {{ $eventTextClass }}">{{ $event['homeScore'] }} - {{ $event['awayScore'] }}</div>
+                                    <div class="fw-bold {{ $eventTextClass }}">{{ $event['homeScore'] ?? 0 }} - {{ $event['awayScore'] ?? 0 }}</div>
                                 </div>
                             </div>
                             @endforeach

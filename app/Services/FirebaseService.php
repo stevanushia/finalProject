@@ -13,7 +13,7 @@ class FirebaseService
 
     public function __construct()
     {
-        $credentialsPath = base_path('firebase_credentials.json'); // HARDCODED FOR TESTING
+        $credentialsPath = base_path('firebase_credentials.json');
         if (!file_exists($credentialsPath)) {
             throw new \Exception("Firebase credentials file not found at: " . $credentialsPath);
         }

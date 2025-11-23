@@ -156,104 +156,138 @@ class GameOverviewController extends Controller
         return $quarters;
     }
 
-    private function processPlayerStats($scoringEvents, $gameData = null)
+    private function processPlayerStats($scoringEvents, $gameData)
     {
         $players = [];
+        $matchLogs = $gameData['game_logs']['match_logs'] ?? [];
         
-        // Get player roster data if available
-        $playerRoster = [];
-        if ($gameData && isset($gameData['players'])) {
+        // 1. Initialize Players from Roster (so even players with 0 stats show up)
+        if (isset($gameData['players'])) {
             foreach (['HOME', 'AWAY'] as $teamNode) {
                 if (isset($gameData['players'][$teamNode])) {
-                    foreach ($gameData['players'][$teamNode] as $playerId => $playerData) {
-                        // Use player name as key for easier lookup
-                        $playerName = $playerData['name'] ?? 'Unknown';
-                        $playerRoster[$playerName] = [
-                            'team' => $teamNode, // Use the Firebase node name (HOME/AWAY)
-                            'jerseyNumber' => $playerData['jerseyNumber'] ?? null,
-                            'position' => $playerData['position'] ?? null,
-                            'height' => $playerData['height'] ?? null,
-                            'weight' => $playerData['weight'] ?? null,
-                            'age' => $playerData['age'] ?? null,
-                            'heightWeightDisplay' => $playerData['heightWeightDisplay'] ?? null
-                        ];
+                    foreach ($gameData['players'][$teamNode] as $playerData) {
+                        $name = $playerData['name'] ?? 'Unknown';
+                        $players[$name] = $this->initPlayerStats($name, $teamNode, $playerData);
                     }
                 }
             }
         }
 
-        // Process scoring events
+        // 2. Process Scoring Events (Made Shots & Points)
         foreach ($scoringEvents as $event) {
-            $playerName = $event['player'] ?? 'Unknown';
-            $eventTeam = $event['team'] ?? 'HOME'; // This should be HOME or AWAY from scoring events
-            $points = $event['points'] ?? 0;
-            $shotType = $event['shotType'] ?? '2PT';
+            $name = $event['player'] ?? 'Unknown';
+            $team = $event['team'] ?? 'HOME';
+            $points = (int)($event['points'] ?? 0);
+            $type = $event['shotType'] ?? '2PT';
 
-            // Initialize player if not exists
-            if (!isset($players[$playerName])) {
-                // Get roster info if available, otherwise use defaults
-                $rosterInfo = $playerRoster[$playerName] ?? [
-                    'team' => $eventTeam, // Use event team as fallback
-                    'jerseyNumber' => null,
-                    'position' => null,
-                    'height' => null,
-                    'weight' => null,
-                    'age' => null,
-                    'heightWeightDisplay' => null
-                ];
-
-                $players[$playerName] = [
-                    'name' => $playerName,
-                    'team' => $rosterInfo['team'], // This should be HOME or AWAY
-                    'points' => 0,
-                    'shots' => ['3PT' => 0, '2PT' => 0, '1PT' => 0],
-                    'totalShots' => 0,
-                    'jerseyNumber' => $rosterInfo['jerseyNumber'],
-                    'position' => $rosterInfo['position'],
-                    'height' => $rosterInfo['height'],
-                    'weight' => $rosterInfo['weight'],
-                    'age' => $rosterInfo['age'],
-                    'heightWeightDisplay' => $rosterInfo['heightWeightDisplay']
-                ];
+            if (!isset($players[$name])) {
+                $players[$name] = $this->initPlayerStats($name, $team);
             }
 
-            // Add points and shots
-            $players[$playerName]['points'] += $points;
-            
-            // Ensure shot type exists in the shots array
-            if (!isset($players[$playerName]['shots'][$shotType])) {
-                $players[$playerName]['shots'][$shotType] = 0;
-            }
-            
-            $players[$playerName]['shots'][$shotType]++;
-            $players[$playerName]['totalShots']++;
-        }
+            $players[$name]['stats']['PTS'] += $points;
 
-        // Add players from roster who didn't score (optional)
-        foreach ($playerRoster as $playerName => $rosterData) {
-            if (!isset($players[$playerName])) {
-                $players[$playerName] = [
-                    'name' => $playerName,
-                    'team' => $rosterData['team'], // HOME or AWAY
-                    'points' => 0,
-                    'shots' => ['3PT' => 0, '2PT' => 0, '1PT' => 0],
-                    'totalShots' => 0,
-                    'jerseyNumber' => $rosterData['jerseyNumber'],
-                    'position' => $rosterData['position'],
-                    'height' => $rosterData['height'],
-                    'weight' => $rosterData['weight'],
-                    'age' => $rosterData['age'],
-                    'heightWeightDisplay' => $rosterData['heightWeightDisplay']
-                ];
+            if ($type === '1PT') {
+                $players[$name]['stats']['FT_M']++;
+                $players[$name]['stats']['FT_A']++;
+            } elseif ($type === '2PT') {
+                $players[$name]['stats']['2PT_M']++;
+                $players[$name]['stats']['2PT_A']++;
+            } elseif ($type === '3PT') {
+                $players[$name]['stats']['3PT_M']++;
+                $players[$name]['stats']['3PT_A']++;
             }
         }
 
-        // Sort by points (descending)
-        uasort($players, function($a, $b) {
-            return $b['points'] - $a['points'];
-        });
+        // 3. Process Match Logs (Misses, Rebounds, Assists, etc.)
+        foreach ($matchLogs as $log) {
+            $name = $log['player'] ?? 'Unknown';
+            $team = $log['team'] ?? 'HOME';
+            $type = $log['stat_type'] ?? '';
+
+            // Skip processing if it's just a scoring log (already handled)
+            if (in_array($type, ['1PT', '2PT', '3PT'])) continue;
+
+            if (!isset($players[$name])) {
+                $players[$name] = $this->initPlayerStats($name, $team);
+            }
+
+            switch ($type) {
+                case '1PT MISS':
+                    $players[$name]['stats']['FT_A']++;
+                    break;
+                case '2PT MISS':
+                    $players[$name]['stats']['2PT_A']++;
+                    break;
+                case '3PT MISS':
+                    $players[$name]['stats']['3PT_A']++;
+                    break;
+                case 'ASSIST':
+                    $players[$name]['stats']['AST']++;
+                    break;
+                case 'REBOUND':
+                    $players[$name]['stats']['REB']++;
+                    break;
+                case 'STEAL':
+                    $players[$name]['stats']['STL']++;
+                    break;
+                case 'BLOCK':
+                    $players[$name]['stats']['BLK']++;
+                    break;
+                case 'TURNOVER':
+                    $players[$name]['stats']['TO']++;
+                    break;
+                case 'FOUL':
+                    $players[$name]['stats']['FOUL']++;
+                    break;
+            }
+        }
+
+        // 4. Calculate Derived Stats (Percentages & PIR)
+        foreach ($players as &$p) {
+            $s = $p['stats'];
+
+            // Field Goals (2PT + 3PT)
+            $p['stats']['FG_M'] = $s['2PT_M'] + $s['3PT_M'];
+            $p['stats']['FG_A'] = $s['2PT_A'] + $s['3PT_A'];
+
+            // Percentages
+            $p['stats']['FG%'] = $p['stats']['FG_A'] > 0 ? round(($p['stats']['FG_M'] / $p['stats']['FG_A']) * 100) : 0;
+            $p['stats']['2PT%'] = $s['2PT_A'] > 0 ? round(($s['2PT_M'] / $s['2PT_A']) * 100) : 0;
+            $p['stats']['3PT%'] = $s['3PT_A'] > 0 ? round(($s['3PT_M'] / $s['3PT_A']) * 100) : 0;
+            $p['stats']['FT%'] = $s['FT_A'] > 0 ? round(($s['FT_M'] / $s['FT_A']) * 100) : 0;
+
+            // PIR Calculation
+            // Formula: (PTS + REB + AST + STL + BLK) - (Missed FG + Missed FT + TO + FOUL)
+            $missedFG = $p['stats']['FG_A'] - $p['stats']['FG_M'];
+            $missedFT = $s['FT_A'] - $s['FT_M'];
+            
+            $pir = ($s['PTS'] + $s['REB'] + $s['AST'] + $s['STL'] + $s['BLK']) 
+                 - ($missedFG + $missedFT + $s['TO'] + $s['FOUL']);
+            
+            $p['stats']['PIR'] = $pir;
+        }
+
+        // Sort by PIR (Performance) Descending
+        uasort($players, fn($a, $b) => $b['stats']['PIR'] <=> $a['stats']['PIR']);
 
         return array_values($players);
+    }
+
+    private function initPlayerStats($name, $team, $rosterData = [])
+    {
+        return [
+            'name' => $name,
+            'team' => $team,
+            'jerseyNumber' => $rosterData['jerseyNumber'] ?? '-',
+            'position' => $rosterData['position'] ?? '-',
+            'stats' => [
+                'PTS' => 0,
+                '2PT_M' => 0, '2PT_A' => 0,
+                '3PT_M' => 0, '3PT_A' => 0,
+                'FT_M' => 0, 'FT_A' => 0,
+                'AST' => 0, 'REB' => 0, 'STL' => 0, 'BLK' => 0, 'TO' => 0, 'FOUL' => 0
+            ]
+        ];
     }
 
     private function processTeamComparison($scoringEvents, $overview)
@@ -322,6 +356,8 @@ class GameOverviewController extends Controller
                 'quarter' => $quarter,
                 'timestamp' => $timestamp,
                 'description' => $description,
+                'points' => 0, // <--- THIS IS THE FIX: Default points to 0
+                'shotType' => null,
                 'details' => $log // Include all log details for reference
             ];
         }
