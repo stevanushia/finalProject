@@ -92,27 +92,41 @@
                         <div class="card-body p-0">
                             <div class="row g-0">
                                 <div class="col-md-9 p-4">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="badge bg-danger bg-opacity-10 text-danger fw-bold px-3 py-2">
-                                            <i class="fas fa-clock me-1"></i> {{ $game['quarter'] }}
+                                    <div class="d-flex align-items-center mb-3">
+                                        <span class="badge bg-danger bg-opacity-10 text-danger fw-bold px-2 py-1 me-2" style="font-size: 0.75rem;">
+                                            <i class="fas fa-circle fa-xs me-1"></i> {{ $game['quarter'] }}
                                         </span>
-                                        <small class="text-muted fw-bold text-uppercase tracking-wider">{{ $game['name'] }}</small>
+                                        <span class="text-muted fw-bold text-uppercase small tracking-wider text-truncate">
+                                            {{ $game['name'] }}
+                                        </span>
                                     </div>
+
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <div class="text-center" style="width: 40%;">
-                                            <h5 class="fw-bold mb-0 text-truncate">{{ $game['home'] }}</h5>
+                                        <div class="text-start" style="flex: 1; min-width: 0;">
+                                            <h5 class="fw-bold mb-0 text-dark text-truncate" title="{{ $game['home'] }}">
+                                                {{ $game['home'] }}
+                                            </h5>
                                         </div>
-                                        <div class="text-center bg-light rounded-pill px-4 py-2 fw-bold fs-4" style="min-width: 120px;">
-                                            {{ $game['homeScore'] }} : {{ $game['awayScore'] }}
+
+                                        <div class="mx-3 text-center">
+                                            <div class="bg-light rounded-3 px-3 py-2 d-flex align-items-center justify-content-center" style="min-width: 100px;">
+                                                <span class="display-6 fw-bold text-dark lh-1">{{ $game['homeScore'] }}</span>
+                                                <span class="mx-2 text-muted fw-light">:</span>
+                                                <span class="display-6 fw-bold text-dark lh-1">{{ $game['awayScore'] }}</span>
+                                            </div>
                                         </div>
-                                        <div class="text-center" style="width: 40%;">
-                                            <h5 class="fw-bold mb-0 text-truncate">{{ $game['away'] }}</h5>
+
+                                        <div class="text-end" style="flex: 1; min-width: 0;">
+                                            <h5 class="fw-bold mb-0 text-dark text-truncate" title="{{ $game['away'] }}">
+                                                {{ $game['away'] }}
+                                            </h5>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3 bg-primary text-white d-flex flex-column align-items-center justify-content-center p-3 text-center">
-                                    <a href="{{ route('game.overview.specific', $game['id']) }}" class="btn btn-light fw-bold btn-sm w-100 stretched-link">
-                                        Watch Live
+
+                                <div class="col-md-3 bg-primary text-white d-flex align-items-center justify-content-center p-3">
+                                    <a href="{{ route('game.overview.specific', $game['id']) }}" class="btn btn-light fw-bold btn-sm w-100 stretched-link shadow-sm">
+                                        <i class="fas fa-eye me-1"></i> Watch Live
                                     </a>
                                 </div>
                             </div>

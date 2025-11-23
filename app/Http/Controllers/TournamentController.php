@@ -45,43 +45,54 @@ class TournamentController extends Controller
      */
     public function store(Request $request)
     {
-        // 1. VALIDATION (This checks the input, but doesn't set the variable)
         $request->validate([
             'name' => 'required|string|max:255',
-            'start_date' => 'required|date|after_or_equal:today', // <--- The rule goes HERE
+            'start_date' => 'required|date|after_or_equal:today',
             'participant_count' => 'required|in:4,8,16',
-            'teams' => 'required|array|min:4',
-            'teams.*' => 'required|string|distinct'
+            'teams' => 'required|array',
+            'teams.*.name' => 'required|string|distinct',
+            'teams.*.players' => 'nullable|string' // JSON string
         ]);
-
-        // ... (team count check) ...
 
         $firebaseUid = session('firebase_uid');
         if (!$firebaseUid) return redirect('/login')->with('error', 'Session expired.');
 
         $tournamentId = uniqid('trn_');
-        $teams = array_values($request->teams); 
-        $matches = $this->generateBracket($teams, $request->participant_count);
+        $participantCount = (int)$request->participant_count;
+        
+        // 1. Process Teams & Players
+        $teamsData = [];
+        $teamNames = []; // Used for bracket generation
 
-        // 2. CONVERT DATE (Calculate the timestamp)
+        foreach ($request->teams as $index => $data) {
+            $teamName = $data['name'];
+            $teamNames[] = $teamName; // Add to simple list for bracket
+            
+            $players = json_decode($data['players'] ?? '[]', true);
+            
+            // Store structured data
+            $teamsData[$teamName] = [
+                'name' => $teamName,
+                'players' => $players
+            ];
+        }
+
+        // 2. Generate Bracket
+        $matches = $this->generateBracket($teamNames, $participantCount);
+
         $startDateTimestamp = \Carbon\Carbon::parse($request->start_date)->getTimestampMs();
 
-        // 3. SAVE DATA
         $tournamentData = [
             'id' => $tournamentId,
             'name' => $request->name,
             'creatorUid' => $firebaseUid,
             'status' => 'upcoming',
             'type' => 'single_elimination',
-            'participantCount' => (int)$request->participant_count,
-            
-            // This is when the tournament BEGINS (User selected)
+            'participantCount' => $participantCount,
             'startDate' => $startDateTimestamp, 
-            
-            // ✅ NEW: This is when you clicked "Generate Bracket" (Now)
             'createdAt' => \Carbon\Carbon::now()->getTimestampMs(), 
             
-            'teams' => $teams,
+            'teams' => $teamsData, // Now saving full object with players
             'matches' => $matches,
             'winner' => null
         ];

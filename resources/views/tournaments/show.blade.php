@@ -9,8 +9,27 @@
     <div class="row mb-5">
         <div class="col-12">
             <div class="bg-primary rounded-3 p-4 shadow-lg text-white position-relative overflow-hidden">
+                <div class="position-absolute top-0 end-0 opacity-10">
+                    <i class="fas fa-trophy" style="font-size: 8rem;"></i>
+                </div>
+                
                 <div class="d-flex justify-content-between align-items-center position-relative z-1">
-                    <h1 class="display-5 fw-bolder m-0">{{ $tournament['name'] ?? 'Tournament' }}</h1>
+                    <div>
+                        <h1 class="display-5 fw-bolder m-0">{{ $tournament['name'] ?? 'Tournament' }}</h1>
+                        <div class="d-flex gap-3 align-items-center mt-2">
+                            <span class="badge bg-light text-primary fw-bold fs-6">
+                                {{ count($tournament['teams'] ?? []) }} Teams
+                            </span>
+                            <span class="badge {{ ($tournament['status'] ?? '') == 'completed' ? 'bg-success' : 'bg-warning text-dark' }} fw-bold fs-6">
+                                {{ strtoupper($tournament['status'] ?? 'UPCOMING') }}
+                            </span>
+                            @if(!empty($tournament['winner']))
+                                <div class="ms-3 fw-bold text-warning fs-4">
+                                    <i class="fas fa-crown me-2"></i>Winner: {{ $tournament['winner'] }}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
                     
                     @php
                         $currentUserUid = session('firebase_uid');
@@ -36,52 +55,44 @@
     {{-- BRACKET SECTION --}}
     <div class="card shadow-lg border-0 rounded-3">
         <div class="card-body bg-light p-0 overflow-auto custom-scrollbar">
-            <div class="bracket-container p-5 d-flex flex-row">
+            <div class="bracket-container p-5 d-flex flex-row justify-content-center">
                 
                 @if(isset($rounds) && count($rounds) > 0)
                     @foreach($rounds as $roundNum => $matches)
                         
                         @php
-                            // SPACING CALCULATIONS
                             $roundIndex = $loop->index; 
                             $baseGap = 30; 
-                            
-                            // IMPORTANT: Match Height must include the button area
-                            // Team 1 (40px) + Team 2 (40px) + Button (35px) + Borders/Padding approx = 130-140px
                             $matchHeight = $canEdit ? 140 : 100; 
-                            
                             $verticalMargin = ($baseGap * pow(2, $roundIndex)) / 2; 
                         @endphp
 
                         {{-- ROUND COLUMN --}}
-                        <div class="round-column d-flex flex-column justify-content-center" style="min-width: 260px;">
+                        <div class="round-column d-flex flex-column justify-content-center" style="min-width: 280px; margin: 0 20px;">
                             
+                            <div class="text-center mb-4 fw-bold text-uppercase text-muted tracking-wider">
+                                @if($loop->last) Final @elseif($loop->iteration == $loop->count - 1) Semi-Finals @else Round {{ $roundNum }} @endif
+                            </div>
+
                             @foreach($matches as $match)
                                 <div class="match-wrapper d-flex align-items-center position-relative" style="margin-top: {{ $verticalMargin }}px; margin-bottom: {{ $verticalMargin }}px;">
                                     
-                                    {{-- ROUND HEADER (Above first match only) --}}
-                                    @if($loop->first)
-                                        <div class="position-absolute w-100 text-center" style="top: -45px; left: 0;">
-                                            <span class="badge bg-dark text-white px-4 py-2 rounded-pill text-uppercase tracking-widest shadow-sm border border-secondary" style="font-size: 0.8rem; letter-spacing: 2px;">
-                                                @if($loop->parent->last) 🏆 Final 
-                                                @elseif($loop->parent->iteration == $loop->parent->count - 1) Semi-Finals 
-                                                @else Round {{ $roundNum }} 
-                                                @endif
-                                            </span>
-                                        </div>
-                                    @endif
-
                                     {{-- THE MATCH CARD --}}
-                                    <div class="card border-0 shadow-sm w-100 overflow-hidden" style="height: {{ $matchHeight }}px;">
+                                    <div class="card border-0 shadow-sm w-100 overflow-hidden match-card" style="height: {{ $matchHeight }}px;">
                                         
                                         {{-- 1. HOME TEAM --}}
                                         <div class="match-team px-3 border-bottom d-flex justify-content-between align-items-center flex-grow-1 
                                             {{ ($match['winner'] ?? null) === ($match['home'] ?? null) && ($match['home'] ?? null) != null ? 'bg-success bg-gradient text-white' : 'bg-white' }}"
                                             style="height: 35%;">
                                             
-                                            <span class="fw-bold text-truncate" style="max-width: 140px; font-size: 0.9rem;">
-                                                {{ $match['home'] ?? 'TBD' }}
-                                            </span>
+                                            <div class="d-flex align-items-center text-truncate" style="max-width: 150px;">
+                                                <span class="fw-bold me-2" style="font-size: 0.9rem;">{{ $match['home'] ?? 'TBD' }}</span>
+                                                @if(($match['home'] ?? null) && ($match['home'] ?? null) !== 'TBD')
+                                                    <button type="button" class="btn btn-link p-0 text-muted" onclick="viewRoster('{{ $match['home'] }}')" title="View Roster">
+                                                        <i class="fas fa-info-circle small"></i>
+                                                    </button>
+                                                @endif
+                                            </div>
                                             <span class="badge {{ ($match['winner'] ?? null) === ($match['home'] ?? null) ? 'bg-white text-success' : 'bg-light text-dark' }}">{{ $match['scoreHome'] ?? 0 }}</span>
                                         </div>
 
@@ -90,13 +101,18 @@
                                             {{ ($match['winner'] ?? null) === ($match['away'] ?? null) && ($match['away'] ?? null) != null ? 'bg-success bg-gradient text-white' : 'bg-white' }}"
                                             style="height: 35%;">
                                             
-                                            <span class="fw-bold text-truncate" style="max-width: 140px; font-size: 0.9rem;">
-                                                {{ $match['away'] ?? 'TBD' }}
-                                            </span>
+                                            <div class="d-flex align-items-center text-truncate" style="max-width: 150px;">
+                                                <span class="fw-bold me-2" style="font-size: 0.9rem;">{{ $match['away'] ?? 'TBD' }}</span>
+                                                @if(($match['away'] ?? null) && ($match['away'] ?? null) !== 'TBD')
+                                                    <button type="button" class="btn btn-link p-0 text-muted" onclick="viewRoster('{{ $match['away'] }}')" title="View Roster">
+                                                        <i class="fas fa-info-circle small"></i>
+                                                    </button>
+                                                @endif
+                                            </div>
                                             <span class="badge {{ ($match['winner'] ?? null) === ($match['away'] ?? null) ? 'bg-white text-success' : 'bg-light text-dark' }}">{{ $match['scoreAway'] ?? 0 }}</span>
                                         </div>
 
-                                        {{-- 3. ACTION BUTTON (FOOTER) --}}
+                                        {{-- 3. ACTION BUTTON --}}
                                         @php
                                             $home = $match['home'] ?? null;
                                             $away = $match['away'] ?? null;
@@ -126,20 +142,19 @@
                                         @endif
                                     </div>
                                     
-                                    {{-- CONNECTOR LINE (Horizontal exiting match) --}}
+                                    {{-- HORIZONTAL LINE --}}
                                     @if(!$loop->parent->last)
-                                        <div class="bracket-line-h" style="width: 40px; height: 2px; background-color: #dee2e6;"></div>
+                                        <div class="bracket-line-h" style="width: 40px; height: 2px; background-color: #dee2e6; position: absolute; right: -40px;"></div>
                                     @endif
                                 </div>
                             @endforeach
                         </div>
                         
-                        {{-- CONNECTOR COLUMN --}}
+                        {{-- VERTICAL CONNECTORS --}}
                         @if(!$loop->last)
                             <div class="connector-column d-flex flex-column justify-content-center" style="width: 40px;">
                                 @php
                                     $connectorCount = count($matches) / 2; 
-                                    // Use the same match height calculated above for alignment
                                     $connectorHeight = $matchHeight + ($verticalMargin * 2); 
                                 @endphp
 
@@ -151,15 +166,6 @@
                                         <div style="height: {{ $connectorHeight }}px;"></div> 
                                     @endif
                                 @endfor
-                            </div>
-                            
-                            {{-- Spacer for next round entry --}}
-                            <div class="d-flex flex-column justify-content-center">
-                                 @for($i = 0; $i < count($matches)/2; $i++)
-                                    <div style="height: {{ ($matchHeight + ($verticalMargin * 2)) * 2 }}px; display: flex; align-items: center;">
-                                        <div style="width: 20px; height: 2px; background-color: #dee2e6;"></div>
-                                    </div>
-                                 @endfor
                             </div>
                         @endif
 
@@ -174,7 +180,7 @@
     </div>
 </div>
 
-{{-- MODALS (Kept the same) --}}
+{{-- UPDATE RESULT MODALS --}}
 @if(isset($rounds) && $canEdit)
     @foreach($rounds as $roundNum => $matches)
         @foreach($matches as $match)
@@ -189,17 +195,19 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body p-4">
+                                
                                 <div class="row align-items-center mb-4 g-2">
                                     <div class="col-5">
-                                        <label class="form-label small text-muted fw-bold">Home</label>
-                                        <input type="text" name="home_team_name" class="form-control fw-bold" value="{{ $match['home'] }}" readonly>
+                                        <label class="form-label small text-muted fw-bold">Home Team</label>
+                                        <input type="text" name="home_team_name" class="form-control fw-bold text-primary" value="{{ $match['home'] }}" required>
                                     </div>
-                                    <div class="col-2 text-center pt-3 fw-bold">VS</div>
+                                    <div class="col-2 text-center pt-3 fw-bold text-muted">VS</div>
                                     <div class="col-5">
-                                        <label class="form-label small text-muted fw-bold">Away</label>
-                                        <input type="text" name="away_team_name" class="form-control fw-bold" value="{{ $match['away'] }}" readonly>
+                                        <label class="form-label small text-muted fw-bold">Away Team</label>
+                                        <input type="text" name="away_team_name" class="form-control fw-bold text-danger" value="{{ $match['away'] }}" required>
                                     </div>
                                 </div>
+
                                 <div class="row g-3">
                                     <div class="col-6">
                                         <div class="card border-primary h-100 text-center p-3 selected-team-card" id="card_home_{{ $match['id'] }}">
@@ -225,7 +233,7 @@
                             </div>
                             <div class="modal-footer bg-light">
                                 <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-success fw-bold px-4">Save</button>
+                                <button type="submit" class="btn btn-success fw-bold px-4">Save & Advance</button>
                             </div>
                         </form>
                     </div>
@@ -236,6 +244,23 @@
     @endforeach
 @endif
 
+{{-- ROSTER VIEW MODAL --}}
+<div class="modal fade" id="rosterViewModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white py-2">
+                <h6 class="modal-title fw-bold" id="rosterTeamName">Team Roster</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <ul class="list-group list-group-flush" id="rosterList">
+                    {{-- Populated by JS --}}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('styles')
 <style>
     .custom-scrollbar::-webkit-scrollbar { height: 8px; }
@@ -243,6 +268,8 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #aaa; }
     .match-team { transition: background-color 0.2s; }
+    .match-card { transition: transform 0.2s; }
+    .match-card:hover { transform: scale(1.02); z-index: 10; }
     .selected-team-card { transition: all 0.2s; }
     input[value="home"]:checked ~ label { background-color: #0d6efd; color: white; }
     input[value="away"]:checked ~ label { background-color: #dc3545; color: white; }
@@ -252,23 +279,67 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // SweetAlert and Logic Scripts
+    // 1. Data passed from Controller
+    const allTeamsData = {!! json_encode($tournament['teams'] ?? []) !!};
+
+    // 2. View Roster Function
+    function viewRoster(teamName) {
+        document.getElementById('rosterTeamName').innerText = teamName;
+        const list = document.getElementById('rosterList');
+        list.innerHTML = '';
+
+        let teamData = null;
+        
+        // Handle legacy array structure vs new object structure
+        if (Array.isArray(allTeamsData)) {
+             // If it's a simple array of names (legacy), we can't show players
+             list.innerHTML = '<li class="list-group-item text-muted text-center py-3">No roster data available<br><small>Legacy Tournament Format</small></li>';
+             new bootstrap.Modal(document.getElementById('rosterViewModal')).show();
+             return;
+        } else {
+            // New format: Object keyed by Team Name
+            teamData = allTeamsData[teamName];
+        }
+
+        if (teamData && teamData.players && teamData.players.length > 0) {
+            teamData.players.forEach(p => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.innerHTML = `
+                    <div><span class="fw-bold text-primary me-2">#${p.number}</span> ${p.name}</div>
+                    <span class="badge bg-light text-dark border">${p.pos}</span>
+                `;
+                list.appendChild(li);
+            });
+        } else {
+            list.innerHTML = '<li class="list-group-item text-muted text-center py-3">No players registered for this team.</li>';
+        }
+
+        new bootstrap.Modal(document.getElementById('rosterViewModal')).show();
+    }
+
+    // 3. Delete Confirmation
     function confirmDelete() {
         Swal.fire({
-            title: 'Delete Tournament?', text: "Cannot be reverted!", icon: 'warning',
+            title: 'Delete Tournament?', text: "This action cannot be undone!", icon: 'warning',
             showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Yes, delete it!'
         }).then((result) => { if (result.isConfirmed) document.getElementById('delete-tournament-form').submit(); });
     }
+
+    // 4. Toast Messages
     document.addEventListener('DOMContentLoaded', function() {
         @if(session('success')) Swal.fire({ icon: 'success', title: 'Success', text: "{{ session('success') }}", toast: true, position: 'top-end', timer: 3000, showConfirmButton: false }); @endif
         @if(session('error')) Swal.fire({ icon: 'error', title: 'Error', text: "{{ session('error') }}", toast: true, position: 'top-end', timer: 4000, showConfirmButton: false }); @endif
     });
+
+    // 5. Winner Auto-Select Logic
     function checkWinner(id) {
         const h = parseInt(document.getElementById('score_home_'+id).value)||0;
         const a = parseInt(document.getElementById('score_away_'+id).value)||0;
         if(h>a) { document.getElementById('win_home_'+id).checked=true; highlightWinner(id,'home'); }
         else if(a>h) { document.getElementById('win_away_'+id).checked=true; highlightWinner(id,'away'); }
     }
+
     function highlightWinner(id, w) {
         const hc = document.getElementById('card_home_'+id);
         const ac = document.getElementById('card_away_'+id);

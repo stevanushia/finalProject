@@ -5,61 +5,34 @@
 @section('content')
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-10"> {{-- Increased width --}}
             <div class="card shadow border-0">
                 
-                {{-- Header Section --}}
                 <div class="card-header bg-primary text-white py-3 position-relative" style="z-index: 2;">
                     <h4 class="mb-0 fw-bold"><i class="fas fa-trophy me-2"></i>Create New Tournament</h4>
                 </div>
 
-                {{-- Body Section --}}
                 <div class="card-body p-4 bg-white position-relative" style="z-index: 1;">
-                    <div class="mt-2"></div> 
-                    
                     <form action="{{ route('tournaments.store') }}" method="POST" id="tournamentForm">
                         @csrf
                         
-                        {{-- 1. Tournament Name (Full Width) --}}
-                        <div class="mb-4">
-                            <label for="name" class="form-label fw-bold">Tournament Name</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white"><i class="fas fa-heading text-muted"></i></span>
-                                <input type="text" class="form-control" id="name" name="name" placeholder="e.g., Winter Cup 2025" required>
-                            </div>
-                        </div>
-
-                        {{-- 2. Date and Size (Side-by-Side) --}}
+                        {{-- Basic Info --}}
                         <div class="row g-3 mb-4">
-                            {{-- NEW: Start Date Field with MIN attribute --}}
                             <div class="col-md-6">
-                                <label for="start_date" class="form-label fw-bold">Start Date</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white"><i class="fas fa-calendar-alt text-muted"></i></span>
-                                    <input type="date" 
-                                           class="form-control" 
-                                           id="start_date" 
-                                           name="start_date" 
-                                           required 
-                                           value="{{ date('Y-m-d') }}"
-                                           min="{{ date('Y-m-d') }}"
-                                           style="cursor: pointer"> {{-- THIS DISABLES PAST DATES --}}
-                                </div>
+                                <label class="form-label fw-bold">Tournament Name</label>
+                                <input type="text" class="form-control" name="name" placeholder="e.g., Winter Cup 2025" required>
                             </div>
-
-                            {{-- Team Count Selector --}}
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Number of Teams</label>
-                                <div class="btn-group w-100" role="group">
-                                    <input type="radio" class="btn-check" name="participant_count" id="size4" value="4" onchange="generateTeamInputs(4)">
-                                    <label class="btn btn-outline-primary" for="size4">4</label>
-
-                                    <input type="radio" class="btn-check" name="participant_count" id="size8" value="8" checked onchange="generateTeamInputs(8)">
-                                    <label class="btn btn-outline-primary" for="size8">8</label>
-
-                                    <input type="radio" class="btn-check" name="participant_count" id="size16" value="16" onchange="generateTeamInputs(16)">
-                                    <label class="btn btn-outline-primary" for="size16">16</label>
-                                </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Start Date</label>
+                                <input type="date" class="form-control" name="start_date" required value="{{ date('Y-m-d') }}" min="{{ date('Y-m-d') }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Size</label>
+                                <select class="form-select" name="participant_count" id="participant_count" onchange="generateTeamInputs(this.value)">
+                                    <option value="4">4 Teams</option>
+                                    <option value="8" selected>8 Teams</option>
+                                    <option value="16">16 Teams</option>
+                                </select>
                             </div>
                         </div>
 
@@ -67,18 +40,13 @@
 
                         {{-- Teams Section --}}
                         <div class="mb-4">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <label class="form-label fw-bold mb-0">Registered Teams</label>
-                                <small class="text-muted">Enter names for all participants</small>
-                            </div>
-                            
+                            <h5 class="fw-bold mb-3">Team Registration</h5>
                             <div id="teamInputs" class="row g-3">
-                                {{-- JavaScript will populate this --}}
+                                {{-- Generated by JS --}}
                             </div>
                         </div>
 
-                        {{-- Action Buttons --}}
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <div class="d-flex justify-content-end gap-2">
                             <a href="{{ route('tournaments.index') }}" class="btn btn-outline-secondary px-4">Cancel</a>
                             <button type="submit" class="btn btn-primary px-5 fw-bold">Generate Bracket</button>
                         </div>
@@ -89,26 +57,169 @@
     </div>
 </div>
 
+{{-- PLAYER MODAL --}}
+<div class="modal fade" id="playerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" style="color: white;">Manage Roster: <span id="modalTeamName" class="text-warning fw-bold">Team #1</span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <input type="hidden" id="currentTeamIndex">
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered bg-white" id="playerTable">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th style="width: 50%">Player Name</th>
+                                <th style="width: 20%">Number</th>
+                                <th style="width: 20%">Position</th>
+                                <th style="width: 10%">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="playerRows">
+                            {{-- Rows added here --}}
+                        </tbody>
+                    </table>
+                </div>
+                <button type="button" class="btn btn-outline-primary w-100 mt-2" onclick="addPlayerRow()">
+                    <i class="fas fa-plus-circle me-1"></i> Add Player
+                </button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success fw-bold px-4" onclick="saveRoster()">Save Roster</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+    // 1. Define a global variable to hold the modal instance
+    let playerModalInstance = null;
+    
+    // Store roster data in memory
+    let rosters = {};
+
     function generateTeamInputs(count) {
         const container = document.getElementById('teamInputs');
         container.innerHTML = '';
         
         for (let i = 1; i <= count; i++) {
             const div = document.createElement('div');
-            div.className = 'col-md-6';
+            div.className = 'col-md-6'; // Grid layout
+            
+            // UPDATED LAYOUT: Cleaner, no outer card, label inside the group
             div.innerHTML = `
-                <div class="input-group">
-                    <span class="input-group-text bg-white text-muted">#${i}</span>
-                    <input type="text" class="form-control" name="teams[]" placeholder="Team Name ${i}" required>
+                <div class="input-group shadow-sm h-100">
+                    {{-- Fixed Label Section (Icon + Team #) --}}
+                    <span class="input-group-text bg-light fw-bold text-secondary" style="min-width: 120px;">
+                        <i class="fas fa-shield-alt me-2 text-primary"></i> Team ${i}
+                    </span>
+                    
+                    {{-- Input Field --}}
+                    <input type="text" 
+                           class="form-control fw-bold" 
+                           name="teams[${i}][name]" 
+                           placeholder="Enter Team Name" 
+                           required 
+                           oninput="updateModalTitle(${i}, this.value)">
+                    
+                    {{-- Roster Button --}}
+                    <button type="button" class="btn btn-outline-primary" onclick="openPlayerModal(${i})" title="Manage Players">
+                        <i class="fas fa-user-plus"></i> 
+                        <span class="badge bg-primary ms-1 rounded-pill" id="count-${i}">0</span>
+                    </button>
                 </div>
+                
+                <input type="hidden" name="teams[${i}][players]" id="roster-input-${i}" value="[]">
             `;
             container.appendChild(div);
         }
     }
 
-    // Initialize with the checked value (8)
+    function updateModalTitle(index, name) {
+        // Optional: Logic to update modal title if open
+    }
+
+    function openPlayerModal(index) {
+        document.getElementById('currentTeamIndex').value = index;
+        const teamNameInput = document.querySelector(`input[name="teams[${index}][name]"]`);
+        document.getElementById('modalTeamName').innerText = teamNameInput.value || `Team #${index}`;
+        
+        const tbody = document.getElementById('playerRows');
+        tbody.innerHTML = '';
+
+        // Load existing data if any
+        const currentRoster = rosters[index] || [];
+        
+        if (currentRoster.length === 0) {
+            addPlayerRow(); // Add one empty row by default
+        } else {
+            currentRoster.forEach(p => addPlayerRow(p.name, p.number, p.pos));
+        }
+
+        // Create/Store the instance manually
+        const modalEl = document.getElementById('playerModal');
+        if (!playerModalInstance) {
+            playerModalInstance = new bootstrap.Modal(modalEl);
+        }
+        playerModalInstance.show();
+    }
+
+    function addPlayerRow(name = '', number = '', pos = '') {
+        const tbody = document.getElementById('playerRows');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" class="form-control" placeholder="Name" value="${name}"></td>
+            <td><input type="number" class="form-control" placeholder="#" value="${number}"></td>
+            <td>
+                <select class="form-select">
+                    <option value="PG" ${pos==='PG'?'selected':''}>PG</option>
+                    <option value="SG" ${pos==='SG'?'selected':''}>SG</option>
+                    <option value="SF" ${pos==='SF'?'selected':''}>SF</option>
+                    <option value="PF" ${pos==='PF'?'selected':''}>PF</option>
+                    <option value="C" ${pos==='C'?'selected':''}>C</option>
+                </select>
+            </td>
+            <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
+        `;
+        tbody.appendChild(row);
+    }
+
+    function saveRoster() {
+        const index = document.getElementById('currentTeamIndex').value;
+        const rows = document.querySelectorAll('#playerRows tr');
+        const newRoster = [];
+
+        rows.forEach(row => {
+            const inputs = row.querySelectorAll('input, select');
+            if(inputs[0] && inputs[0].value.trim() !== '') {
+                newRoster.push({
+                    name: inputs[0].value,
+                    number: inputs[1].value,
+                    pos: inputs[2].value
+                });
+            }
+        });
+
+        // Save to memory
+        rosters[index] = newRoster;
+
+        // Update Hidden Input
+        document.getElementById(`roster-input-${index}`).value = JSON.stringify(newRoster);
+
+        // Update Badge Count
+        document.getElementById(`count-${index}`).innerText = newRoster.length;
+
+        // Hide Modal
+        if (playerModalInstance) {
+            playerModalInstance.hide();
+        }
+    }
+
+    // Initialize with the default checked value (8)
     document.addEventListener('DOMContentLoaded', () => generateTeamInputs(8));
 </script>
 @endpush
