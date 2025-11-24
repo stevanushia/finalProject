@@ -133,9 +133,9 @@
         <a href="{{ route('tournaments.index') }}">
             <i class="fas fa-trophy"></i> Tournaments
         </a>
-        
-        <a href="{{ route('game.list') }}">
-            <i class="fas fa-basketball-ball"></i> Game Sessions
+
+        <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.index') ? 'active' : '' }}">
+            <i class="fas fa-users-cog"></i> Master Users
         </a>
         
         {{-- Placeholder for future features --}}

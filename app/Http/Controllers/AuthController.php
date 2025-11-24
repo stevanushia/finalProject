@@ -99,7 +99,6 @@ class AuthController extends Controller
             $firebaseUser = $auth->getUser($uid);
             
             // --- NEW SYNC LOGIC ---
-            // --- NEW SYNC LOGIC ---
             // 1. Get user data from Realtime Database
             $rtdbUser = $database->getReference('users/' . $uid)->getValue();
             $rtdbName = $rtdbUser['displayName'] ?? null;

@@ -419,4 +419,97 @@ class AdminController extends Controller
             return back()->with('error', 'Failed to generate tournament report.');
         }
     }
+
+    /**
+     * MASTER USERS: List all Firebase Users
+     */
+    public function users(Request $request)
+    {
+        try {
+            $factory = (new \Kreait\Firebase\Factory)
+                ->withServiceAccount(base_path('firebase_credentials.json'));
+            $auth = $factory->createAuth();
+
+            // List users (default limit is 1000)
+            $users = $auth->listUsers($defaultMaxResults = 1000, $defaultBatchSize = 1000);
+
+            // We also need to fetch the 'users' node from Realtime DB to see who is Premium/Admin
+            $dbUsers = $this->database->getReference('users')->getValue() ?? [];
+
+            $userList = [];
+            foreach ($users as $user) {
+                $uid = $user->uid;
+                $dbData = $dbUsers[$uid] ?? [];
+
+                $userList[] = [
+                    'uid' => $uid,
+                    'email' => $user->email,
+                    'displayName' => $user->displayName,
+                    'photoUrl' => $user->photoUrl,
+                    'disabled' => $user->disabled,
+                    'lastLogin' => $user->metadata->lastLoginAt ? $user->metadata->lastLoginAt->format('Y-m-d H:i') : 'Never',
+                    'createdAt' => $user->metadata->createdAt ? $user->metadata->createdAt->format('Y-m-d H:i') : '-',
+                    'isPremium' => $dbData['isPremium'] ?? false,
+                    'isAdmin' => $dbData['isAdmin'] ?? false,
+                ];
+            }
+
+            return view('admin.users.index', compact('userList'));
+
+        } catch (\Exception $e) {
+            report($e);
+            return back()->with('error', 'Failed to fetch users: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * MASTER USERS: Toggle Disabled Status
+     */
+    public function toggleUserStatus($uid)
+    {
+        try {
+            $factory = (new \Kreait\Firebase\Factory)
+                ->withServiceAccount(base_path('firebase_credentials.json'));
+            $auth = $factory->createAuth();
+
+            $user = $auth->getUser($uid);
+            
+            if ($user->disabled) {
+                $auth->enableUser($uid);
+                $msg = 'User enabled successfully.';
+            } else {
+                $auth->disableUser($uid);
+                $msg = 'User disabled successfully.';
+            }
+
+            return back()->with('success', $msg);
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Action failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * MASTER USERS: Delete User
+     */
+    public function deleteUser($uid)
+    {
+        try {
+            $factory = (new \Kreait\Firebase\Factory)
+                ->withServiceAccount(base_path('firebase_credentials.json'));
+            $auth = $factory->createAuth();
+
+            // Delete from Auth
+            $auth->deleteUser($uid);
+
+            // Optional: Delete from Realtime Database too
+            $this->database->getReference("users/{$uid}")->remove();
+            $this->database->getReference("subscriptions/{$uid}")->remove();
+
+            return back()->with('success', 'User deleted permanently.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Delete failed: ' . $e->getMessage());
+        }
+    }
 }

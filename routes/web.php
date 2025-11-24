@@ -67,6 +67,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/games', [AdminController::class, 'gameReports'])->name('reports.games');
 
         Route::get('/reports/tournaments', [AdminController::class, 'tournamentReports'])->name('reports.tournaments');
+
+        // USER MANAGEMENT
+        Route::get('/users', [AdminController::class, 'users'])->name('users.index');
+        Route::post('/users/{uid}/toggle', [AdminController::class, 'toggleUserStatus'])->name('users.toggle');
+        Route::delete('/users/{uid}', [AdminController::class, 'deleteUser'])->name('users.delete');
         
         // You can add more admin routes here later
     });
