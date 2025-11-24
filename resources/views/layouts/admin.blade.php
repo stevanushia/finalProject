@@ -129,19 +129,15 @@
         </a>
 
         <small class="text-uppercase px-4 fw-bold mt-4 mb-2 d-block" style="font-size: 0.7rem; letter-spacing: 1px;">Management</small>
-        
-        <a href="{{ route('tournaments.index') }}">
-            <i class="fas fa-trophy"></i> Tournaments
-        </a>
 
         <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.index') ? 'active' : '' }}">
             <i class="fas fa-users-cog"></i> Master Users
         </a>
         
         {{-- Placeholder for future features --}}
-        <a href="#">
+        {{-- <a href="#">
             <i class="fas fa-users"></i> Users <span class="badge bg-secondary ms-auto" style="font-size: 0.6rem;">SOON</span>
-        </a>
+        </a> --}}
 
         <small class="text-uppercase px-4 fw-bold mt-4 mb-2 d-block" style="font-size: 0.7rem; letter-spacing: 1px;">Reports</small>
         

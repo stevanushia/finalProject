@@ -10,21 +10,36 @@
             <div class="bg-success rounded p-4 shadow">
                 <div class="row align-items-center">
                     <div class="col-md-8">
-                        <h1 class="display-5 mb-2 fw-bold text-white">{{ $overview['sessionName'] }}</h1>
-                        <p class="lead mb-0 text-white">
-                            Game Overview & Team Performance Analysis
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            {{-- Status Badge --}}
+                            @if($overview['isCompleted'])
+                                <span class="badge bg-white text-success fw-bold px-3 py-2">COMPLETED</span>
+                            @else
+                                <span class="badge bg-warning text-dark fw-bold px-3 py-2">
+                                    <i class="fas fa-circle text-danger fa-xs me-1"></i> LIVE - {{ $overview['quarter'] }}
+                                </span>
+                            @endif
+
+                            {{-- NEW PRINT BUTTON --}}
+                            <a href="{{ route('game.export.pdf', $overview['gameId']) }}" 
+                               class="btn btn-sm btn-light text-success fw-bold shadow-sm d-flex align-items-center px-3"
+                               target="_blank" 
+                               title="Print Game Report">
+                                <i class="fas fa-print me-2"></i> PRINT
+                            </a>
+                        </div>
+
+                        <h1 class="display-5 mb-1 fw-bold text-white">{{ $overview['sessionName'] }}</h1>
+                        <p class="lead mb-0 text-white opacity-75" style="font-size: 1rem;">
+                            <i class="fas fa-chart-line me-2"></i>Game Overview & Performance Analysis
                         </p>
-                        @if($overview['isCompleted'])
-                            <span class="badge bg-light text-success ms-2 fw-bold">COMPLETED</span>
-                        @else
-                            <span class="badge bg-warning text-dark ms-2 fw-bold">{{ $overview['quarter'] }} - IN PROGRESS</span>
-                        @endif
                     </div>
-                    <div class="col-md-4 text-end" style="font-weight: bold; text-align: center">
-                        <div class="fs-1 fw-bold text-white">
+                    
+                    <div class="col-md-4 text-end text-white">
+                        <div class="display-4 fw-bold">
                             {{ $overview['homeScore'] }} - {{ $overview['awayScore'] }}
                         </div>  
-                        <small class="text-light">{{ $overview['homeTeam'] }} vs {{ $overview['awayTeam'] }}</small>
+                        <div class="fs-5 opacity-75">{{ $overview['homeTeam'] }} vs {{ $overview['awayTeam'] }}</div>
                     </div>
                 </div>
             </div>

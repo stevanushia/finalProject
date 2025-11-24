@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\FirebaseService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -539,6 +540,38 @@ class GameOverviewController extends Controller
                 'success' => false,
                 'message' => 'Failed to delete game session: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Export Game Stats to PDF
+     */
+    public function exportPdf($gameId)
+    {
+        try {
+            // 1. Fetch Game Data (Same logic as index)
+            $gameData = $this->firebase->getReference('game_sessions/' . $gameId)->getValue();
+
+            if (!$gameData) {
+                return back()->with('error', 'Game not found.');
+            }
+
+            // 2. Process Data
+            $overview = $this->processGameData($gameData);
+            $overview['gameId'] = $gameId;
+
+            // 3. Load PDF View
+            $pdf = Pdf::loadView('exports.game-report', compact('overview'));
+
+            // 4. Download
+            // Set paper to A4, Landscape for better table visibility
+            $pdf->setPaper('a4', 'landscape');
+
+            return $pdf->download("Game_Report_{$gameId}.pdf");
+
+        } catch (\Exception $e) {
+            report($e);
+            return back()->with('error', 'Failed to generate PDF: ' . $e->getMessage());
         }
     }
 }

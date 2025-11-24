@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/games', [GameOverviewController::class, 'listGames'])->name('game.list');
     Route::get('/game/{gameId}/overview', [GameOverviewController::class, 'index'])->name('game.overview.specific');
     Route::delete('/games/{gameId}/delete', [GameOverviewController::class, 'deleteGame'])->name('games.delete');    
+    Route::get('/game/{gameId}/export', [GameOverviewController::class, 'exportPdf'])->name('game.export.pdf');
 
     // Profile route
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
@@ -72,6 +73,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/users', [AdminController::class, 'users'])->name('users.index');
         Route::post('/users/{uid}/toggle', [AdminController::class, 'toggleUserStatus'])->name('users.toggle');
         Route::delete('/users/{uid}', [AdminController::class, 'deleteUser'])->name('users.delete');
+
+        // MASTER PLANS
+        Route::get('/plans', [AdminController::class, 'plans'])->name('plans.index');
+        Route::post('/plans', [AdminController::class, 'storePlan'])->name('plans.store');
+        Route::delete('/plans/{id}', [AdminController::class, 'deletePlan'])->name('plans.delete');
         
         // You can add more admin routes here later
     });
