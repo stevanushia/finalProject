@@ -69,10 +69,12 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/reports/tournaments', [AdminController::class, 'tournamentReports'])->name('reports.tournaments');
 
-        // USER MANAGEMENT
+        // MASTER USERS
         Route::get('/users', [AdminController::class, 'users'])->name('users.index');
+        Route::post('/users/{uid}/update', [AdminController::class, 'updateUser'])->name('users.update'); 
         Route::post('/users/{uid}/toggle', [AdminController::class, 'toggleUserStatus'])->name('users.toggle');
         Route::delete('/users/{uid}', [AdminController::class, 'deleteUser'])->name('users.delete');
+        
 
         // MASTER PLANS
         Route::get('/plans', [AdminController::class, 'plans'])->name('plans.index');

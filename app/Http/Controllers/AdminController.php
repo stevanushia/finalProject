@@ -512,4 +512,68 @@ class AdminController extends Controller
             return back()->with('error', 'Delete failed: ' . $e->getMessage());
         }
     }
+
+    /**
+     * MASTER USERS: Update User Details
+     */
+    public function updateUser(Request $request, $uid)
+    {
+        $request->validate([
+            'displayName' => 'required|string|max:255',
+            'email' => 'required|email',
+            'role' => 'required|in:admin,user',
+            'membership' => 'required|in:premium,free',
+        ]);
+
+        try {
+            $factory = (new \Kreait\Firebase\Factory)
+                ->withServiceAccount(base_path('firebase_credentials.json'));
+            $auth = $factory->createAuth();
+
+            // 1. Update Firebase Auth (Display Name & Email)
+            $properties = [
+                'displayName' => $request->displayName,
+                'email' => $request->email,
+                // 'emailVerified' => true, // Optional: auto-verify email
+            ];
+            
+            // Only update password if provided
+            if ($request->filled('password')) {
+                $properties['password'] = $request->password;
+            }
+
+            $auth->updateUser($uid, $properties);
+
+            // 2. Update Realtime Database (Role & Membership)
+            $updates = [
+                'displayName' => $request->displayName,
+                'email' => $request->email,
+                'isAdmin' => ($request->role === 'admin'),
+                'isPremium' => ($request->membership === 'premium'),
+                'lastUpdated' => now()->getTimestampMs()
+            ];
+
+            // If manually setting to Premium, ensure subscription node exists/updates
+            if ($request->membership === 'premium') {
+                // Optional: You might want to set a default expiry date (e.g., 1 month from now)
+                // This prevents the app from immediately reverting them to free if no sub exists
+                $expiry = now()->addMonth()->getTimestampMs();
+                $this->database->getReference("subscriptions/{$uid}")->update([
+                    'active' => true,
+                    'expiryDate' => $expiry,
+                    'subscriptionType' => 'manual_admin_grant'
+                ]);
+            } elseif ($request->membership === 'free') {
+                // If setting to free, disable subscription
+                $this->database->getReference("subscriptions/{$uid}")->update(['active' => false]);
+            }
+
+            $this->database->getReference("users/{$uid}")->update($updates);
+
+            return back()->with('success', 'User updated successfully.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Update failed: ' . $e->getMessage());
+        }
+    }
 }

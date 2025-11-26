@@ -10,7 +10,7 @@
         <span class="badge bg-primary">{{ count($userList) }} Users</span>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
+        <div class="table-responsive" style="min-height: 400px;"> {{-- Min-height helps dropdowns have space --}}
             <table id="usersTable" class="table table-hover align-middle w-100">
                 <thead class="table-light">
                     <tr>
@@ -37,7 +37,10 @@
                                     <div>
                                         <div class="fw-bold">{{ $user['displayName'] ?? 'No Name' }}</div>
                                         <div class="text-muted small">{{ $user['email'] }}</div>
-                                        <div class="text-muted bg-light px-1 rounded border" style="font-size: 0.65rem;">{{ $user['uid'] }}</div>
+                                        {{-- Use text-truncate to prevent massive UIDs breaking layout --}}
+                                        <div class="text-muted bg-light px-1 rounded border text-truncate" style="font-size: 0.65rem; max-width: 150px;">
+                                            {{ $user['uid'] }}
+                                        </div>
                                     </div>
                                 </div>
                             </td>
@@ -67,10 +70,22 @@
                             </td>
                             <td class="text-end">
                                 <div class="dropdown">
-                                    <button class="btn btn-sm btn-light border dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    {{-- FIX 1: data-bs-display="static" prevents the dropdown from being hidden by the table --}}
+                                    <button class="btn btn-sm btn-light border dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
                                         Manage
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end">
+                                        {{-- EDIT BUTTON --}}
+                                        <li>
+                                            {{-- FIX 2: Pass data via data-attribute instead of direct onclick --}}
+                                            <button type="button" class="dropdown-item" 
+                                                    data-user-info="{{ json_encode($user) }}"
+                                                    onclick="editUser(this)">
+                                                <i class="fas fa-edit me-2 text-primary"></i> Edit Details
+                                            </button>
+                                        </li>
+                                        
+                                        {{-- TOGGLE STATUS --}}
                                         <li>
                                             <form action="{{ route('admin.users.toggle', $user['uid']) }}" method="POST">
                                                 @csrf
@@ -84,6 +99,7 @@
                                             </form>
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
+                                        {{-- DELETE --}}
                                         <li>
                                             <button type="button" class="dropdown-item text-danger" onclick="confirmDeleteUser('{{ $user['uid'] }}')">
                                                 <i class="fas fa-trash me-2"></i> Delete Permanently
@@ -103,6 +119,60 @@
         </div>
     </div>
 </div>
+
+{{-- EDIT USER MODAL (Kept same, just ensures IDs match) --}}
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editUserForm" method="POST">
+                @csrf
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-user-edit me-2"></i>Edit User</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Display Name</label>
+                        <input type="text" name="displayName" id="editName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Email Address</label>
+                        <input type="email" name="email" id="editEmail" class="form-control" required>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">Role</label>
+                            <select name="role" id="editRole" class="form-select">
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">Membership</label>
+                            <select name="membership" id="editMembership" class="form-select">
+                                <option value="free">Free</option>
+                                <option value="premium">Premium</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="mb-2">
+                        <label class="form-label fw-bold small">Reset Password <span class="text-muted fw-normal">(Optional)</span></label>
+                        <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current password">
+                    </div>
+
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success fw-bold">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
@@ -118,10 +188,29 @@
 <script>
     $(document).ready(function() {
         $('#usersTable').DataTable({
-            "order": [[ 4, "desc" ]], // Sort by Joined Date
+            "order": [[ 4, "desc" ]],
             "pageLength": 10
         });
     });
+
+    // FIX 3: Update the function to parse the data attribute safely
+    function editUser(buttonElement) {
+        // Get the JSON string from the data-attribute and parse it
+        const user = JSON.parse(buttonElement.getAttribute('data-user-info'));
+
+        // Populate form fields
+        document.getElementById('editName').value = user.displayName || '';
+        document.getElementById('editEmail').value = user.email || '';
+        document.getElementById('editRole').value = user.isAdmin ? 'admin' : 'user';
+        document.getElementById('editMembership').value = user.isPremium ? 'premium' : 'free';
+        
+        // Set form action URL dynamically
+        const form = document.getElementById('editUserForm');
+        form.action = `/admin/users/${user.uid}/update`;
+
+        // Show modal
+        new bootstrap.Modal(document.getElementById('editUserModal')).show();
+    }
 
     function confirmDeleteUser(uid) {
         Swal.fire({
