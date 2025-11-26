@@ -31,14 +31,25 @@
                         </div>
                     </div>
                     
+                    {{-- PERMISSION LOGIC --}}
                     @php
                         $currentUserUid = session('firebase_uid');
                         $creatorUid = $tournament['creatorUid'] ?? null;
+                        
+                        // 1. Check if Owner
                         $isCreator = $currentUserUid && $creatorUid && ($currentUserUid === $creatorUid);
-                        $isAdmin = Auth::check() && (Auth::user()->isAdmin ?? false);
+                        
+                        // 2. Check if Admin (Check Model OR Session)
+                        $isAdmin = false;
+                        if (Auth::check()) {
+                            $isAdmin = (Auth::user()->isAdmin ?? false) || (session('firebase_is_admin') === true);
+                        }
+
+                        // 3. Final Permission
                         $canEdit = $isAdmin || $isCreator;
                     @endphp
 
+                    {{-- DELETE BUTTON (Visible if Admin OR Creator) --}}
                     @if($canEdit)
                         <form id="delete-tournament-form" action="{{ route('tournaments.destroy', $tournament['id']) }}" method="POST">
                             @csrf @method('DELETE')
@@ -63,7 +74,7 @@
                         @php
                             $roundIndex = $loop->index; 
                             $baseGap = 30; 
-                            $matchHeight = $canEdit ? 140 : 100; 
+                            $matchHeight = $canEdit ? 140 : 100; // Taller cards for Editors
                             $verticalMargin = ($baseGap * pow(2, $roundIndex)) / 2; 
                         @endphp
 
@@ -81,38 +92,72 @@
                                     <div class="card border-0 shadow-sm w-100 overflow-hidden match-card" style="height: {{ $matchHeight }}px;">
                                         
                                         {{-- 1. HOME TEAM --}}
-                                        <div class="match-team px-3 border-bottom d-flex justify-content-between align-items-center flex-grow-1 
+                                        <div class="match-team px-3 border-bottom d-flex align-items-center justify-content-between 
                                             {{ ($match['winner'] ?? null) === ($match['home'] ?? null) && ($match['home'] ?? null) != null ? 'bg-success bg-gradient text-white' : 'bg-white' }}"
                                             style="height: 35%;">
                                             
-                                            <div class="d-flex align-items-center text-truncate" style="max-width: 150px;">
-                                                <span class="fw-bold me-2" style="font-size: 0.9rem;">{{ $match['home'] ?? 'TBD' }}</span>
+                                            {{-- NAME CONTAINER (Flex-Grow to take space, Min-Width 0 to allow truncation) --}}
+                                            <div class="d-flex align-items-center flex-grow-1" style="min-width: 0;">
+                                                <span class="fw-bold text-truncate" title="{{ $match['home'] ?? 'TBD' }}">
+                                                    {{ $match['home'] ?? 'TBD' }}
+                                                </span>
+                                                
+                                                {{-- EDIT BUTTON (Only show if Team exists) --}}
                                                 @if(($match['home'] ?? null) && ($match['home'] ?? null) !== 'TBD')
-                                                    <button type="button" class="btn btn-link p-0 text-muted" onclick="viewRoster('{{ $match['home'] }}')" title="View Roster">
-                                                        <i class="fas fa-info-circle small"></i>
-                                                    </button>
+                                                    <span class="ms-2 flex-shrink-0"> {{-- flex-shrink-0 prevents crushing --}}
+                                                        @if($canEdit)
+                                                            <button type="button" class="btn btn-link p-0 text-primary" onclick="editRoster('{{ $match['home'] }}')" title="Edit Roster" style="line-height: 1;">
+                                                                <i class="fas fa-edit"></i> {{-- Changed icon to fa-edit (standard) --}}
+                                                            </button>
+                                                        @else
+                                                            <button type="button" class="btn btn-link p-0 text-muted" onclick="viewRoster('{{ $match['home'] }}')" title="View Roster" style="line-height: 1;">
+                                                                <i class="fas fa-info-circle"></i>
+                                                            </button>
+                                                        @endif
+                                                    </span>
                                                 @endif
                                             </div>
-                                            <span class="badge {{ ($match['winner'] ?? null) === ($match['home'] ?? null) ? 'bg-white text-success' : 'bg-light text-dark' }}">{{ $match['scoreHome'] ?? 0 }}</span>
+
+                                            {{-- SCORE BADGE --}}
+                                            <span class="badge ms-2 {{ ($match['winner'] ?? null) === ($match['home'] ?? null) ? 'bg-white text-success' : 'bg-light text-dark' }} flex-shrink-0">
+                                                {{ $match['scoreHome'] ?? 0 }}
+                                            </span>
                                         </div>
 
                                         {{-- 2. AWAY TEAM --}}
-                                        <div class="match-team px-3 d-flex justify-content-between align-items-center flex-grow-1
+                                        <div class="match-team px-3 d-flex align-items-center justify-content-between
                                             {{ ($match['winner'] ?? null) === ($match['away'] ?? null) && ($match['away'] ?? null) != null ? 'bg-success bg-gradient text-white' : 'bg-white' }}"
                                             style="height: 35%;">
                                             
-                                            <div class="d-flex align-items-center text-truncate" style="max-width: 150px;">
-                                                <span class="fw-bold me-2" style="font-size: 0.9rem;">{{ $match['away'] ?? 'TBD' }}</span>
+                                            {{-- NAME CONTAINER --}}
+                                            <div class="d-flex align-items-center flex-grow-1" style="min-width: 0;">
+                                                <span class="fw-bold text-truncate" title="{{ $match['away'] ?? 'TBD' }}">
+                                                    {{ $match['away'] ?? 'TBD' }}
+                                                </span>
+                                                
+                                                {{-- EDIT BUTTON --}}
                                                 @if(($match['away'] ?? null) && ($match['away'] ?? null) !== 'TBD')
-                                                    <button type="button" class="btn btn-link p-0 text-muted" onclick="viewRoster('{{ $match['away'] }}')" title="View Roster">
-                                                        <i class="fas fa-info-circle small"></i>
-                                                    </button>
+                                                    <span class="ms-2 flex-shrink-0">
+                                                        @if($canEdit)
+                                                            <button type="button" class="btn btn-link p-0 text-primary" onclick="editRoster('{{ $match['away'] }}')" title="Edit Roster" style="line-height: 1;">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                        @else
+                                                            <button type="button" class="btn btn-link p-0 text-muted" onclick="viewRoster('{{ $match['away'] }}')" title="View Roster" style="line-height: 1;">
+                                                                <i class="fas fa-info-circle"></i>
+                                                            </button>
+                                                        @endif
+                                                    </span>
                                                 @endif
                                             </div>
-                                            <span class="badge {{ ($match['winner'] ?? null) === ($match['away'] ?? null) ? 'bg-white text-success' : 'bg-light text-dark' }}">{{ $match['scoreAway'] ?? 0 }}</span>
+
+                                            {{-- SCORE BADGE --}}
+                                            <span class="badge ms-2 {{ ($match['winner'] ?? null) === ($match['away'] ?? null) ? 'bg-white text-success' : 'bg-light text-dark' }} flex-shrink-0">
+                                                {{ $match['scoreAway'] ?? 0 }}
+                                            </span>
                                         </div>
 
-                                        {{-- 3. ACTION BUTTON --}}
+                                        {{-- 3. UPDATE RESULT BUTTON --}}
                                         @php
                                             $home = $match['home'] ?? null;
                                             $away = $match['away'] ?? null;
@@ -180,7 +225,7 @@
     </div>
 </div>
 
-{{-- UPDATE RESULT MODALS --}}
+{{-- 1. UPDATE MATCH MODALS (Score) --}}
 @if(isset($rounds) && $canEdit)
     @foreach($rounds as $roundNum => $matches)
         @foreach($matches as $match)
@@ -210,7 +255,7 @@
 
                                 <div class="row g-3">
                                     <div class="col-6">
-                                        <div class="card border-primary h-100 text-center p-3 selected-team-card" id="card_home_{{ $match['id'] }}">
+                                        <div class="card border-primary h-100 text-center p-3" id="card_home_{{ $match['id'] }}">
                                             <span class="badge bg-primary mb-2">HOME</span>
                                             <input type="number" name="score_home" id="score_home_{{ $match['id'] }}" class="form-control form-control-lg text-center fw-bold mb-2" required min="0" value="{{ $match['scoreHome'] ?? 0 }}" oninput="checkWinner('{{ $match['id'] }}')">
                                             <div>
@@ -220,7 +265,7 @@
                                         </div>
                                     </div>
                                     <div class="col-6">
-                                        <div class="card border-danger h-100 text-center p-3 selected-team-card" id="card_away_{{ $match['id'] }}">
+                                        <div class="card border-danger h-100 text-center p-3" id="card_away_{{ $match['id'] }}">
                                             <span class="badge bg-danger mb-2">AWAY</span>
                                             <input type="number" name="score_away" id="score_away_{{ $match['id'] }}" class="form-control form-control-lg text-center fw-bold mb-2" required min="0" value="{{ $match['scoreAway'] ?? 0 }}" oninput="checkWinner('{{ $match['id'] }}')">
                                             <div>
@@ -244,7 +289,7 @@
     @endforeach
 @endif
 
-{{-- ROSTER VIEW MODAL --}}
+{{-- 2. ROSTER VIEW MODAL (For Guests) --}}
 <div class="modal fade" id="rosterViewModal" tabindex="-1">
     <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content">
@@ -253,13 +298,65 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-0">
-                <ul class="list-group list-group-flush" id="rosterList">
-                    {{-- Populated by JS --}}
-                </ul>
+                <ul class="list-group list-group-flush" id="rosterList"></ul>
             </div>
         </div>
     </div>
 </div>
+
+{{-- 3. ROSTER EDIT MODAL (For Admin/Creator) --}}
+@if($canEdit)
+<div class="modal fade" id="rosterEditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form action="{{ route('tournaments.team.update', $tournament['id']) }}" method="POST">
+                @csrf
+                <input type="hidden" name="team_key" id="editTeamKey">
+                <input type="hidden" name="players" id="editPlayersJson">
+
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-user-edit me-2"></i>Edit Team & Roster</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Team Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-shield-alt"></i></span>
+                            <input type="text" name="new_name" id="editTeamName" class="form-control fw-bold text-primary">
+                        </div>
+                        <div class="form-text text-muted">Changing name here updates the roster, not match history.</div>
+                    </div>
+                    
+                    <hr>
+                    <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
+                        <span>Players</span>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addEditRow()">
+                            <i class="fas fa-plus-circle"></i> Add Player
+                        </button>
+                    </h6>
+                    
+                    <table class="table table-bordered">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>Name</th>
+                                <th width="20%">Number</th>
+                                <th width="20%">Pos</th>
+                                <th width="5%"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="editRosterTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success fw-bold" onclick="saveEditRosterData()">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
 
 @push('styles')
 <style>
@@ -279,27 +376,16 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // 1. Data passed from Controller
     const allTeamsData = {!! json_encode($tournament['teams'] ?? []) !!};
+    let editPlayers = [];
 
-    // 2. View Roster Function
+    // --- VIEW ROSTER (Guests) ---
     function viewRoster(teamName) {
         document.getElementById('rosterTeamName').innerText = teamName;
         const list = document.getElementById('rosterList');
         list.innerHTML = '';
 
-        let teamData = null;
-        
-        // Handle legacy array structure vs new object structure
-        if (Array.isArray(allTeamsData)) {
-             // If it's a simple array of names (legacy), we can't show players
-             list.innerHTML = '<li class="list-group-item text-muted text-center py-3">No roster data available<br><small>Legacy Tournament Format</small></li>';
-             new bootstrap.Modal(document.getElementById('rosterViewModal')).show();
-             return;
-        } else {
-            // New format: Object keyed by Team Name
-            teamData = allTeamsData[teamName];
-        }
+        let teamData = Array.isArray(allTeamsData) ? null : allTeamsData[teamName];
 
         if (teamData && teamData.players && teamData.players.length > 0) {
             teamData.players.forEach(p => {
@@ -312,13 +398,62 @@
                 list.appendChild(li);
             });
         } else {
-            list.innerHTML = '<li class="list-group-item text-muted text-center py-3">No players registered for this team.</li>';
+            list.innerHTML = '<li class="list-group-item text-muted text-center py-3">No players registered.</li>';
         }
-
         new bootstrap.Modal(document.getElementById('rosterViewModal')).show();
     }
 
-    // 3. Delete Confirmation
+    // --- EDIT ROSTER (Admin/Creator) ---
+    @if($canEdit)
+    function editRoster(teamName) {
+        // 1. Setup Form Keys
+        document.getElementById('editTeamKey').value = teamName;
+        document.getElementById('editTeamName').value = teamName;
+        
+        // 2. Get Players
+        let teamData = Array.isArray(allTeamsData) ? null : allTeamsData[teamName];
+        editPlayers = (teamData && teamData.players) ? JSON.parse(JSON.stringify(teamData.players)) : [];
+        
+        // 3. Render & Show
+        renderEditRows();
+        new bootstrap.Modal(document.getElementById('rosterEditModal')).show();
+    }
+
+    function renderEditRows() {
+        const tbody = document.getElementById('editRosterTableBody');
+        tbody.innerHTML = '';
+        editPlayers.forEach((p, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="form-control form-control-sm" value="${p.name}" onchange="updateEditPlayer(${index}, 'name', this.value)"></td>
+                <td><input type="number" class="form-control form-control-sm" value="${p.number}" onchange="updateEditPlayer(${index}, 'number', this.value)"></td>
+                <td>
+                    <select class="form-select form-select-sm" onchange="updateEditPlayer(${index}, 'pos', this.value)">
+                        <option value="PG" ${p.pos==='PG'?'selected':''}>PG</option>
+                        <option value="SG" ${p.pos==='SG'?'selected':''}>SG</option>
+                        <option value="SF" ${p.pos==='SF'?'selected':''}>SF</option>
+                        <option value="PF" ${p.pos==='PF'?'selected':''}>PF</option>
+                        <option value="C" ${p.pos==='C'?'selected':''}>C</option>
+                    </select>
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm text-danger" onclick="removeEditPlayer(${index})"><i class="fas fa-times"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function addEditRow() { editPlayers.push({name: '', number: '', pos: 'PG'}); renderEditRows(); }
+    function removeEditPlayer(index) { editPlayers.splice(index, 1); renderEditRows(); }
+    function updateEditPlayer(index, field, value) { editPlayers[index][field] = value; }
+    function saveEditRosterData() { 
+        const clean = editPlayers.filter(p => p.name.trim() !== '');
+        document.getElementById('editPlayersJson').value = JSON.stringify(clean);
+    }
+    @endif
+
+    // --- GENERAL UTILS ---
     function confirmDelete() {
         Swal.fire({
             title: 'Delete Tournament?', text: "This action cannot be undone!", icon: 'warning',
@@ -326,13 +461,6 @@
         }).then((result) => { if (result.isConfirmed) document.getElementById('delete-tournament-form').submit(); });
     }
 
-    // 4. Toast Messages
-    document.addEventListener('DOMContentLoaded', function() {
-        @if(session('success')) Swal.fire({ icon: 'success', title: 'Success', text: "{{ session('success') }}", toast: true, position: 'top-end', timer: 3000, showConfirmButton: false }); @endif
-        @if(session('error')) Swal.fire({ icon: 'error', title: 'Error', text: "{{ session('error') }}", toast: true, position: 'top-end', timer: 4000, showConfirmButton: false }); @endif
-    });
-
-    // 5. Winner Auto-Select Logic
     function checkWinner(id) {
         const h = parseInt(document.getElementById('score_home_'+id).value)||0;
         const a = parseInt(document.getElementById('score_away_'+id).value)||0;
@@ -346,6 +474,11 @@
         if(w==='home'){ hc.classList.add('bg-light'); ac.classList.remove('bg-light'); ac.style.opacity='0.5'; hc.style.opacity='1'; }
         else { ac.classList.add('bg-light'); hc.classList.remove('bg-light'); hc.style.opacity='0.5'; ac.style.opacity='1'; }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        @if(session('success')) Swal.fire({ icon: 'success', title: 'Success', text: "{{ session('success') }}", toast: true, position: 'top-end', timer: 3000, showConfirmButton: false }); @endif
+        @if(session('error')) Swal.fire({ icon: 'error', title: 'Error', text: "{{ session('error') }}", toast: true, position: 'top-end', timer: 4000, showConfirmButton: false }); @endif
+    });
 </script>
 @endpush
 @endsection

@@ -282,4 +282,61 @@ class TournamentController extends Controller
 
         return $matches;
     }
+
+    /**
+     * Update Team Name and Roster
+     */
+    public function updateTeam(Request $request, $tournamentId)
+    {
+        $request->validate([
+            'team_key' => 'required', // The original team name (used as key)
+            'new_name' => 'required|string',
+            'players' => 'nullable|string' // JSON string of players
+        ]);
+
+        try {
+            // 1. Security Check
+            $ref = $this->database->getReference("tournaments/{$tournamentId}");
+            $tournament = $ref->getValue();
+            
+            if (!$tournament) return back()->with('error', 'Tournament not found.');
+
+            $currentUserUid = session('firebase_uid');
+            $isCreator = ($tournament['creatorUid'] ?? '') === $currentUserUid;
+            $isAdmin = Auth::check() && (Auth::user()->isAdmin ?? false);
+
+            if (!$isCreator && !$isAdmin) {
+                return back()->with('error', 'Unauthorized action.');
+            }
+
+            // 2. Process Update
+            $oldName = $request->team_key;
+            $newName = $request->new_name;
+            $players = json_decode($request->players, true) ?? [];
+
+            $teamsRef = $this->database->getReference("tournaments/{$tournamentId}/teams");
+
+            if ($oldName !== $newName) {
+                // If name changed: Create new key, Delete old key
+                $teamsRef->getChild($oldName)->remove();
+                $teamsRef->getChild($newName)->set([
+                    'name' => $newName,
+                    'players' => $players
+                ]);
+                
+                // NOTE: This does NOT automatically rename the team in existing Match History brackets.
+                // That would require a complex loop through all matches. 
+                // For now, this updates the Roster definition.
+            } else {
+                // Name is same, just update players
+                $teamsRef->getChild($oldName)->update(['players' => $players]);
+            }
+
+            return back()->with('success', 'Team roster updated successfully.');
+
+        } catch (\Exception $e) {
+            report($e);
+            return back()->with('error', 'Failed to update team: ' . $e->getMessage());
+        }
+    }
 }

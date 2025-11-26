@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/tournaments/create', [TournamentController::class, 'create'])->name('tournaments.create');
     Route::post('/tournaments', [TournamentController::class, 'store'])->name('tournaments.store');
     Route::get('/tournaments/{id}', [TournamentController::class, 'show'])->name('tournaments.show');
+    Route::post('/tournaments/{id}/team-update', [TournamentController::class, 'updateTeam'])->name('tournaments.team.update');
     
     // UPDATE MATCH (Existing)
     Route::post('/tournaments/{tournamentId}/match/{matchId}', [TournamentController::class, 'updateMatch'])->name('tournaments.match.update');
@@ -81,7 +82,18 @@ Route::middleware('auth')->group(function () {
         Route::post('/plans', [AdminController::class, 'storePlan'])->name('plans.store');
         Route::delete('/plans/{id}', [AdminController::class, 'deletePlan'])->name('plans.delete');
         
-        // You can add more admin routes here later
+        // MASTER TOURNAMENTS
+        Route::get('/tournaments', [AdminController::class, 'masterTournaments'])->name('tournaments.index');
+        Route::get('/tournaments/{id}/edit', [AdminController::class, 'editTournament'])->name('tournaments.edit');
+        Route::post('/tournaments/{id}/update', [AdminController::class, 'updateTournament'])->name('tournaments.update');
+        Route::post('/tournaments/{id}/team-update', [AdminController::class, 'updateTournamentTeam'])->name('tournaments.team.update');
+        Route::delete('/tournaments/{id}', [AdminController::class, 'deleteTournament'])->name('tournaments.delete');
+
+        // EXPORT ROUTES
+        Route::get('/reports/financial/export', [AdminController::class, 'exportFinancialReport'])->name('reports.financial.export');
+        Route::get('/reports/users/export', [AdminController::class, 'exportUserReport'])->name('reports.users.export');
+        Route::get('/reports/games/export', [AdminController::class, 'exportGameReport'])->name('reports.games.export');
+        Route::get('/reports/tournaments/export', [AdminController::class, 'exportTournamentReport'])->name('reports.tournaments.export');
     });
 });
 

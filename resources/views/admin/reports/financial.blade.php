@@ -4,6 +4,16 @@
 @section('header', 'Financial Analytics')
 
 @section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold text-dark">Financial Overview</h4>
+        <p class="text-muted mb-0">Track revenue and transaction history</p>
+    </div>
+    <a href="{{ route('admin.reports.financial.export') }}" class="btn btn-danger fw-bold shadow-sm">
+        <i class="fas fa-file-pdf me-2"></i> Export Report
+    </a>
+</div>
+
 <div class="row g-4 mb-4">
     <div class="col-md-4">
         <div class="card border-0 shadow-sm border-start border-4 border-success h-100">

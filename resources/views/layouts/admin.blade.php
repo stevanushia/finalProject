@@ -122,24 +122,24 @@
     </div>
     
     <div class="sidebar-menu">
-        <small class="text-uppercase px-4 fw-bold mb-2 d-block" style="font-size: 0.7rem; letter-spacing: 1px; color">Analytics</small>
+        <small class="text-uppercase px-4 fw-bold mb-2 d-block" style="font-size: 0.7rem; letter-spacing: 1px; color:white;">Analytics</small>
         
         <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
             <i class="fas fa-th-large"></i> Dashboard
         </a>
 
-        <small class="text-uppercase px-4 fw-bold mt-4 mb-2 d-block" style="font-size: 0.7rem; letter-spacing: 1px;">Management</small>
+        <small class="text-uppercase px-4 fw-bold mt-4 mb-2 d-block" style="font-size: 0.7rem; letter-spacing: 1px; color:white;">Management</small>
 
         <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.index') ? 'active' : '' }}">
             <i class="fas fa-users-cog"></i> Master Users
         </a>
         
-        {{-- Placeholder for future features --}}
-        {{-- <a href="#">
-            <i class="fas fa-users"></i> Users <span class="badge bg-secondary ms-auto" style="font-size: 0.6rem;">SOON</span>
-        </a> --}}
+        {{-- NEW: Master Tournaments Link --}}
+        <a href="{{ route('admin.tournaments.index') }}" class="{{ request()->routeIs('admin.tournaments.*') ? 'active' : '' }}">
+            <i class="fas fa-sitemap"></i> Master Tournaments
+        </a>
 
-        <small class="text-uppercase px-4 fw-bold mt-4 mb-2 d-block" style="font-size: 0.7rem; letter-spacing: 1px;">Reports</small>
+        <small class="text-uppercase px-4 fw-bold mt-4 mb-2 d-block" style="font-size: 0.7rem; letter-spacing: 1px; color: white">Reports</small>
         
         <a href="{{ route('admin.reports.financial') }}" class="{{ request()->routeIs('admin.reports.financial') ? 'active' : '' }}">
             <i class="fas fa-chart-line"></i> Financial Report
