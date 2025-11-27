@@ -22,18 +22,31 @@
                                     data-stage-padding="0" data-loop="true" data-margin="10"
                                     data-mouse-drag="false" data-touch-drag="false"
                                     data-nav-custom=".owl-carousel-navbar">
-                                    <article class="post-inline">
-                                        <time class="post-inline-time" datetime="2020">April 15, 2020</time>
-                                        <p class="post-inline-title">Sportland vs Dream Team</p>
-                                    </article>
-                                    <article class="post-inline">
-                                        <time class="post-inline-time" datetime="2020">April 15, 2020</time>
-                                        <p class="post-inline-title">Sportland vs Real Madrid</p>
-                                    </article>
-                                    <article class="post-inline">
-                                        <time class="post-inline-time" datetime="2020">April 15, 2020</time>
-                                        <p class="post-inline-title">Sportland vs Barcelona</p>
-                                    </article>
+                                    
+                                    {{-- DYNAMIC CONTENT --}}
+                                    @if(isset($upcomingTournaments) && count($upcomingTournaments) > 0)
+                                        @foreach($upcomingTournaments as $t)
+                                            <article class="post-inline">
+                                                <time class="post-inline-time" datetime="{{ date('Y', $t['startDate']/1000) }}">
+                                                    {{ date('F d, Y', $t['startDate']/1000) }}
+                                                </time>
+                                                <p class="post-inline-title">
+                                                    <a href="{{ route('tournaments.show', $t['id']) }}">{{ $t['name'] }}</a>
+                                                </p>
+                                            </article>
+                                        @endforeach
+                                    @else
+                                        {{-- FALLBACK (Shown if no tournaments or on pages without data) --}}
+                                        <article class="post-inline">
+                                            <time class="post-inline-time" datetime="{{ date('Y') }}">{{ date('F d, Y') }}</time>
+                                            <p class="post-inline-title">Welcome to CourtSide Stats</p>
+                                        </article>
+                                        <article class="post-inline">
+                                            <time class="post-inline-time" datetime="{{ date('Y') }}">{{ date('F d, Y') }}</time>
+                                            <p class="post-inline-title">Track your games in real-time</p>
+                                        </article>
+                                    @endif
+
                                 </div>
                             </div>
                         </div>
@@ -52,7 +65,6 @@
                                         <a class="dropdown-item" href="{{ route('profile') }}">My Profile</a>
                                     </li>
                                     
-                                    {{-- ✅ NEW LOCATION: Admin Link inside Dropdown --}}
                                     @if(session('firebase_is_admin') === true)
                                     <li>
                                         <a class="dropdown-item" href="{{ route('admin.dashboard') }}" style="color: #ffc107; font-weight: bold;">
@@ -60,7 +72,6 @@
                                         </a>
                                     </li>
                                     @endif
-                                    {{-- End Admin Link --}}
 
                                     <li><a class="dropdown-item" href="">Create Team</a></li>
                                     <li>
@@ -88,44 +99,21 @@
                         data-rd-navbar-toggle=".rd-navbar-collapse"><span></span></div>
                 </div>
             </div>
+            
             <div class="rd-navbar-main">
                 <div class="rd-navbar-main-top">
-                    <div class="rd-navbar-main-container container">
-                        <div class="rd-navbar-brand"><a class="brand" href="./"><img class="brand-logo "
-                                    src="{{ asset('assets/images/main-logo.png') }}" alt="" width="95"
-                                    height="126" /></a>
+                    {{-- ADDED: d-flex justify-content-center to center the logo --}}
+                    <div class="rd-navbar-main-container container d-flex justify-content-center align-items-center">
+                        
+                        <div class="rd-navbar-brand">
+                            <a class="brand" href="./">
+                                <img class="brand-logo" src="{{ asset('assets/images/main-logo.png') }}" alt="" width="95" height="126" />
+                            </a>
                         </div>
-                        <ul class="rd-navbar-list">
-                            <li class="rd-navbar-list-item"><a class="rd-navbar-list-link" href="#"><img
-                                        src="{{ asset('assets/images/partners-1-inverse-75x42.png') }}" alt="" width="75"
-                                        height="42" /></a></li>
-                            <li class="rd-navbar-list-item"><a class="rd-navbar-list-link" href="#"><img
-                                        src="{{ asset('assets/images/partners-2-inverse-88x45.png') }}" alt="" width="88"
-                                        height="45" /></a></li>
-                            <li class="rd-navbar-list-item"><a class="rd-navbar-list-link" href="#"><img
-                                        src="{{ asset('assets/images/partners-3-inverse-79x52.png') }}" alt="" width="79"
-                                        height="52" /></a></li>
-                        </ul>
-                        <div class="rd-navbar-search">
-                            <button class="rd-navbar-search-toggle"
-                                data-rd-navbar-toggle=".rd-navbar-search"><span></span></button>
-                            <form class="rd-search" action="#" data-search-live="rd-search-results-live"
-                                method="GET">
-                                <div class="form-wrap">
-                                    <label class="form-label" for="rd-navbar-search-form-input">Enter your
-                                        search request
-                                        here...</label>
-                                    <input class="rd-navbar-search-form-input form-input"
-                                        id="rd-navbar-search-form-input" type="text" name="s"
-                                        autocomplete="off">
-                                    <div class="rd-search-results-live" id="rd-search-results-live"></div>
-                                </div>
-                                <button class="rd-search-form-submit fl-budicons-launch-search81"
-                                    type="submit"></button>
-                            </form>
-                        </div>
+                        
                     </div>
                 </div>
+                
                 <div class="rd-navbar-main-bottom rd-navbar-darker">
                     <div class="rd-navbar-main-container container">
                         <ul class="rd-navbar-nav">
@@ -133,8 +121,6 @@
                             <li class="rd-nav-item {{ Route::is('game.list') ? 'active' : '' }}"><a class="rd-nav-link" href="{{ route('game.list') }}">Game overview</a></li>
                             <li class="rd-nav-item"><a class="rd-nav-link" href="{{ route('tournaments.index') }}">Tournament</a></li>
                             <li class="rd-nav-item"><a class="rd-nav-link" href="{{ route('subscription.show') }}">Subscription</a></li>
-                            
-                            {{-- ❌ REMOVED ADMIN LINK FROM HERE --}}
                         </ul>
                         <div class="rd-navbar-main-element">
                             <ul class="list-inline list-inline-sm">
