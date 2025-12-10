@@ -47,11 +47,11 @@ class TournamentController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'start_date' => 'required|date|after_or_equal:today',
+            'start_date' => 'required|date',
             'participant_count' => 'required|in:4,8,16',
             'teams' => 'required|array',
             'teams.*.name' => 'required|string|distinct',
-            'teams.*.players' => 'nullable|string' // JSON string
+            'teams.*.players' => 'nullable|string'
         ]);
 
         $firebaseUid = session('firebase_uid');
@@ -60,25 +60,24 @@ class TournamentController extends Controller
         $tournamentId = uniqid('trn_');
         $participantCount = (int)$request->participant_count;
         
-        // 1. Process Teams & Players
+        // 1. Process Teams
         $teamsData = [];
-        $teamNames = []; // Used for bracket generation
+        $teamNames = [];
 
         foreach ($request->teams as $index => $data) {
             $teamName = $data['name'];
-            $teamNames[] = $teamName; // Add to simple list for bracket
+            $teamNames[] = $teamName;
             
             $players = json_decode($data['players'] ?? '[]', true);
-            
-            // Store structured data
             $teamsData[$teamName] = [
                 'name' => $teamName,
                 'players' => $players
             ];
         }
 
-        // 2. Generate Bracket
-        $matches = $this->generateBracket($teamNames, $participantCount);
+        // 2. Generate Bracket with Unique IDs
+        // FIX: Pass $tournamentId to ensure match IDs are unique (e.g., trn_123_r1_m1)
+        $matches = $this->generateBracket($teamNames, $participantCount, $tournamentId);
 
         $startDateTimestamp = \Carbon\Carbon::parse($request->start_date)->getTimestampMs();
 
@@ -91,8 +90,7 @@ class TournamentController extends Controller
             'participantCount' => $participantCount,
             'startDate' => $startDateTimestamp, 
             'createdAt' => \Carbon\Carbon::now()->getTimestampMs(), 
-            
-            'teams' => $teamsData, // Now saving full object with players
+            'teams' => $teamsData,
             'matches' => $matches,
             'winner' => null
         ];
@@ -224,17 +222,21 @@ class TournamentController extends Controller
     /**
      * Helper: Generate Single Elimination Bracket
      */
-    private function generateBracket($teams, $count)
+    private function generateBracket($teams, $count, $tournamentId)
     {
         $matches = [];
         $totalRounds = log($count, 2);
         
         // Round 1 (Quarter/Eighth Finals)
-        $matchIndex = 1;
         for ($i = 0; $i < $count; $i += 2) {
-            $matchId = "r1_m" . ceil(($i + 1) / 2);
-            $nextMatchId = "r2_m" . ceil(ceil(($i + 1) / 2) / 2);
-            $nextMatchSlot = (ceil(($i + 1) / 2) % 2 != 0) ? 'home' : 'away';
+            $matchNum = ceil(($i + 1) / 2);
+            $nextMatchNum = ceil($matchNum / 2);
+
+            // FIX: Prepend Tournament ID to make match ID unique globally
+            $matchId = "{$tournamentId}_r1_m{$matchNum}";
+            $nextMatchId = "{$tournamentId}_r2_m{$nextMatchNum}";
+            
+            $nextMatchSlot = ($matchNum % 2 != 0) ? 'home' : 'away';
 
             $matches[$matchId] = [
                 'id' => $matchId,
@@ -255,13 +257,14 @@ class TournamentController extends Controller
         for ($r = 2; $r <= $totalRounds; $r++) {
             $matchesPerRound /= 2;
             for ($m = 1; $m <= $matchesPerRound; $m++) {
-                $matchId = "r{$r}_m{$m}";
+                // FIX: Prepend Tournament ID
+                $matchId = "{$tournamentId}_r{$r}_m{$m}";
                 
-                // Calculate next match for this one
+                // Calculate next match
                 $nextMatchId = null;
                 $nextMatchSlot = null;
                 if ($r < $totalRounds) {
-                    $nextMatchId = "r" . ($r + 1) . "_m" . ceil($m / 2);
+                    $nextMatchId = "{$tournamentId}_r" . ($r + 1) . "_m" . ceil($m / 2);
                     $nextMatchSlot = ($m % 2 != 0) ? 'home' : 'away';
                 }
 
