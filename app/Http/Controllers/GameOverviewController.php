@@ -319,7 +319,7 @@ class GameOverviewController extends Controller
     {
         $timeline = [];
 
-        // Process scoring events
+        // 1. Process Scoring Events
         foreach ($scoringEvents as $event) {
             $timeline[] = [
                 'type' => 'score',
@@ -327,54 +327,49 @@ class GameOverviewController extends Controller
                 'team' => $event['team'] ?? 'HOME',
                 'quarter' => $event['quarter'] ?? 'Q1',
                 'shotType' => $event['shotType'] ?? '2PT',
-                'points' => $event['points'] ?? 0,
+                'points' => $event['points'] ?? 0, // <--- Key Fix: Default to 0
                 'timestamp' => $event['timestamp'] ?? 0,
-                'description' => ($event['player'] ?? 'Unknown') . ' scored ' . ($event['points'] ?? 0) . ' points (' . ($event['shotType'] ?? '2PT') . ')'
+                'description' => ($event['player'] ?? 'Unknown') . ' scored ' . ($event['points'] ?? 0) . ' points'
             ];
         }
 
-        // Process match logs (non-scoring events)
+        // 2. Process Match Logs (Fouls, Timeouts, etc.)
         foreach ($matchLogs as $log) {
             $statType = $log['stat_type'] ?? 'unknown';
-            $player = $log['player'] ?? 'Unknown';
-            $team = $log['team'] ?? 'Unknown';
-            $quarter = $log['quarter'] ?? 'Q1';
-            $timestamp = $log['timestamp'] ?? 0;
-
-            // Skip scoring events as they're already processed above
+            
+            // Skip scoring events if they appear in logs to avoid duplicates
             if (in_array($statType, ['3PT', '2PT', '1PT'])) {
                 continue;
             }
 
-            // Map stat_type to event type and create description
             $eventType = $this->mapStatTypeToEventType($statType);
             $description = $this->getEventDescription($eventType, $log);
             
             $timeline[] = [
                 'type' => $eventType,
-                'player' => $player,
-                'team' => $team,
-                'quarter' => $quarter,
-                'timestamp' => $timestamp,
+                'player' => $log['player'] ?? 'Unknown',
+                'team' => $log['team'] ?? 'Unknown',
+                'quarter' => $log['quarter'] ?? 'Q1',
+                'timestamp' => $log['timestamp'] ?? 0,
                 'description' => $description,
-                'points' => 0, // <--- THIS IS THE FIX: Default points to 0
+                'points' => 0, // <--- Key Fix: Explicitly set points to 0 for non-scoring events
                 'shotType' => null,
-                'details' => $log // Include all log details for reference
+                'details' => $log
             ];
         }
 
-        // Sort by timestamp to get chronological order
+        // 3. Sort Chronologically
         usort($timeline, function($a, $b) {
             return ($a['timestamp'] ?? 0) - ($b['timestamp'] ?? 0);
         });
 
-        // Calculate running scores for timeline display
+        // 4. Calculate Running Score
         $homeScore = 0;
         $awayScore = 0;
         
         foreach ($timeline as &$event) {
             if ($event['type'] === 'score') {
-                $team = strtolower($event['team']);
+                $team = strtolower($event['team'] ?? '');
                 $points = $event['points'] ?? 0;
                 
                 if ($team === 'home') {
@@ -384,7 +379,6 @@ class GameOverviewController extends Controller
                 }
             }
             
-            // Set current score for all events
             $event['homeScore'] = $homeScore;
             $event['awayScore'] = $awayScore;
         }
