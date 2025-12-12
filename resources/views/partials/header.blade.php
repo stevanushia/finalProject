@@ -121,6 +121,9 @@
                             <li class="rd-nav-item {{ Route::is('game.list') ? 'active' : '' }}"><a class="rd-nav-link" href="{{ route('game.list') }}">Game overview</a></li>
                             <li class="rd-nav-item"><a class="rd-nav-link" href="{{ route('tournaments.index') }}">Tournament</a></li>
                             <li class="rd-nav-item"><a class="rd-nav-link" href="{{ route('subscription.show') }}">Subscription</a></li>
+                            <li class="rd-nav-item {{ Route::is('teams.index') ? 'active' : '' }}">
+                                <a class="rd-nav-link" href="{{ route('teams.index') }}">My Teams</a>
+                            </li>
                         </ul>
                         <div class="rd-navbar-main-element">
                             <ul class="list-inline list-inline-sm">

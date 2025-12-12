@@ -18,16 +18,19 @@
                         
                         {{-- Basic Info --}}
                         <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Tournament Name</label>
+                            <div class="col-md-6 position-relative">
+                                {{-- Added mb-2 to push the input down --}}
+                                <label class="fw-bold d-block mb-2">Tournament Name</label>
                                 <input type="text" class="form-control" name="name" placeholder="e.g., Winter Cup 2025" required>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">Start Date</label>
+                            
+                            <div class="col-md-3 position-relative">
+                                <label class="fw-bold d-block mb-2">Start Date</label>
                                 <input type="date" class="form-control" name="start_date" required value="{{ date('Y-m-d') }}" min="{{ date('Y-m-d') }}">
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">Size</label>
+                            
+                            <div class="col-md-3 position-relative">
+                                <label class="fw-bold d-block mb-2">Size</label>
                                 <select class="form-select" name="participant_count" id="participant_count" onchange="generateTeamInputs(this.value)">
                                     <option value="4">4 Teams</option>
                                     <option value="8" selected>8 Teams</option>

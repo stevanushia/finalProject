@@ -21,6 +21,8 @@ Route::get('/template', function () {
 // Subscription page - accessible to everyone (guests can view)
 Route::get('/subscription', [SubscriptionController::class, 'show'])->name('subscription.show');
 
+
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
@@ -44,7 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/subscription/payment', [SubscriptionController::class, 'createPayment'])->name('subscription.payment');
     Route::post('/subscription/cancel', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
 
-// Tournament Routes
+    // Tournament Routes
     Route::get('/tournaments', [TournamentController::class, 'index'])->name('tournaments.index');
     Route::get('/tournaments/create', [TournamentController::class, 'create'])->name('tournaments.create');
     Route::post('/tournaments', [TournamentController::class, 'store'])->name('tournaments.store');
@@ -56,6 +58,10 @@ Route::middleware('auth')->group(function () {
     
     // DELETE TOURNAMENT (New)
     Route::delete('/tournaments/{id}', [TournamentController::class, 'destroy'])->name('tournaments.destroy');
+
+    // Team Management
+    Route::get('/teams', [App\Http\Controllers\TeamController::class, 'index'])->name('teams.index');
+    Route::get('/teams/{id}', [App\Http\Controllers\TeamController::class, 'show'])->name('teams.show');
 
     Route::middleware(['auth', IsFirebaseAdmin::class])->prefix('admin')->name('admin.')->group(function () {
     

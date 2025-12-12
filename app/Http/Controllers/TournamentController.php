@@ -60,25 +60,59 @@ class TournamentController extends Controller
         $tournamentId = uniqid('trn_');
         $participantCount = (int)$request->participant_count;
         
-        // 1. Process Teams
         $teamsData = [];
         $teamNames = [];
+
+        // --- NEW: Master Team Logic ---
+        $masterTeamsRef = $this->database->getReference('teams');
+        $existingTeams = $masterTeamsRef->orderByChild('creatorUid')->equalTo($firebaseUid)->getValue();
+        // ------------------------------
 
         foreach ($request->teams as $index => $data) {
             $teamName = $data['name'];
             $teamNames[] = $teamName;
-            
             $players = json_decode($data['players'] ?? '[]', true);
+            
+            // 1. Find or Create Master Team ID
+            $teamId = null;
+            
+            // Check if this team name already exists for this user
+            if ($existingTeams) {
+                foreach ($existingTeams as $id => $masterTeam) {
+                    if (strcasecmp($masterTeam['name'], $teamName) === 0) {
+                        $teamId = $id; // Found existing ID!
+                        
+                        // Optional: Update roster in master if new one is provided
+                        if (!empty($players)) {
+                            $masterTeamsRef->getChild($id)->update(['defaultRoster' => $players]);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // If not found, create a NEW Master Team
+            if (!$teamId) {
+                $teamId = uniqid('tm_');
+                $masterTeamsRef->getChild($teamId)->set([
+                    'id' => $teamId,
+                    'name' => $teamName,
+                    'creatorUid' => $firebaseUid,
+                    'createdAt' => now()->getTimestampMs(),
+                    'defaultRoster' => $players
+                ]);
+            }
+
+            // 2. Store Tournament Data (Now with teamId link)
             $teamsData[$teamName] = [
                 'name' => $teamName,
+                'teamId' => $teamId, // <--- Link to Master Node
                 'players' => $players
             ];
         }
 
-        // 2. Generate Bracket with Unique IDs
-        // FIX: Pass $tournamentId to ensure match IDs are unique (e.g., trn_123_r1_m1)
+        // 3. Generate Bracket
         $matches = $this->generateBracket($teamNames, $participantCount, $tournamentId);
-
         $startDateTimestamp = \Carbon\Carbon::parse($request->start_date)->getTimestampMs();
 
         $tournamentData = [
