@@ -7,8 +7,8 @@
 <div class="container py-5">
     <div class="row mb-4 align-items-center">
         <div class="col">
-            <h1 class="display-5 fw-bold text-primary">My Teams</h1>
-            <p class="text-muted">Manage your team rosters and view tournament history.</p>
+            <h1 class="display-5 fw-bold text-primary">Team List</h1>
+            <p class="text-muted">List of team rosters that have played on a tournament and view tournament history.</p>
         </div>
         <div class="col-auto">
             {{-- Optional: Link to create tournament since that's where teams are made --}}

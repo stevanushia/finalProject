@@ -37,7 +37,24 @@ class TournamentController extends Controller
      */
     public function create()
     {
-        return view('tournaments.create');
+        $uid = session('firebase_uid');
+        
+        // Fetch user's existing teams for the autocomplete feature
+        $teams = $this->database->getReference('teams')
+                    ->getValue();
+
+        // Convert to array and ensure defaultRoster exists
+        $availableTeams = [];
+        if ($teams) {
+            foreach ($teams as $team) {
+                $availableTeams[] = [
+                    'name' => $team['name'],
+                    'roster' => $team['defaultRoster'] ?? []
+                ];
+            }
+        }
+
+        return view('tournaments.create', compact('availableTeams'));
     }
 
     /**
