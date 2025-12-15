@@ -24,8 +24,6 @@ class TeamController extends Controller
 
         // Fetch teams where creatorUid == current user
         $teams = $this->database->getReference('teams')
-                    ->orderByChild('creatorUid')
-                    ->equalTo($uid)
                     ->getValue();
 
         return view('teams.index', compact('teams'));

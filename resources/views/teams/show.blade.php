@@ -17,7 +17,7 @@
                     <div class="row align-items-center position-relative z-1">
                         <div class="col-md-8">
                             <div class="d-flex align-items-center mb-3">
-                                <a href="{{ route('teams.index') }}" class="btn btn-sm btn-light bg-opacity-25 text-white border-0 me-3">
+                                <a href="{{ route('teams.index') }}" class="btn btn-sm btn-light bg-opacity-25 text-black border-0 me-3">
                                     <i class="fas fa-arrow-left"></i> Back
                                 </a>
                                 <span class="badge bg-warning text-dark fw-bold">MASTER TEAM</span>

@@ -80,55 +80,65 @@ class TournamentController extends Controller
         $teamsData = [];
         $teamNames = [];
 
-        // --- NEW: Master Team Logic ---
-        $masterTeamsRef = $this->database->getReference('teams');
-        $existingTeams = $masterTeamsRef->orderByChild('creatorUid')->equalTo($firebaseUid)->getValue();
-        // ------------------------------
+        // 1. Fetch ALL teams first (Index-Free Approach)
+        // This prevents the "Index not defined" error and ensures we truly check everything.
+        $allMasterTeams = $this->database->getReference('teams')->getValue() ?? [];
 
         foreach ($request->teams as $index => $data) {
-            $teamName = $data['name'];
+            // Trim whitespace to prevent "Lakers " vs "Lakers" duplicates
+            $teamName = trim($data['name']);
             $teamNames[] = $teamName;
             $players = json_decode($data['players'] ?? '[]', true);
             
-            // 1. Find or Create Master Team ID
             $teamId = null;
             
-            // Check if this team name already exists for this user
-            if ($existingTeams) {
-                foreach ($existingTeams as $id => $masterTeam) {
-                    if (strcasecmp($masterTeam['name'], $teamName) === 0) {
-                        $teamId = $id; // Found existing ID!
-                        
-                        // Optional: Update roster in master if new one is provided
-                        if (!empty($players)) {
-                            $masterTeamsRef->getChild($id)->update(['defaultRoster' => $players]);
-                        }
-                        break;
+            // 2. Search Existing Teams in PHP
+            foreach ($allMasterTeams as $id => $masterTeam) {
+                // Check if this team belongs to the user AND matches the name (case-insensitive)
+                if (isset($masterTeam['creatorUid']) && 
+                    $masterTeam['creatorUid'] === $firebaseUid &&
+                    strcasecmp(trim($masterTeam['name']), $teamName) === 0) {
+                    
+                    $teamId = $id; // Found existing team!
+                    
+                    // 3. UPDATE Roster Logic (As requested)
+                    // If found, we FORCE update the existing team's roster with the new input
+                    if (!empty($players)) {
+                        $this->database->getReference("teams/{$teamId}")->update([
+                            'defaultRoster' => $players,
+                            'name' => $teamName // Updates casing if changed (e.g. "lakers" -> "Lakers")
+                        ]);
                     }
+                    break;
                 }
             }
 
-            // If not found, create a NEW Master Team
+            // 4. If Not Found, Create NEW Team
             if (!$teamId) {
                 $teamId = uniqid('tm_');
-                $masterTeamsRef->getChild($teamId)->set([
+                $newTeamData = [
                     'id' => $teamId,
                     'name' => $teamName,
                     'creatorUid' => $firebaseUid,
                     'createdAt' => now()->getTimestampMs(),
                     'defaultRoster' => $players
-                ]);
+                ];
+
+                $this->database->getReference("teams/{$teamId}")->set($newTeamData);
+                
+                // Add to local array so if user uses same name twice in one form (rare), it handles it
+                $allMasterTeams[$teamId] = $newTeamData;
             }
 
-            // 2. Store Tournament Data (Now with teamId link)
+            // 5. Store Tournament Data (Link to Team ID)
             $teamsData[$teamName] = [
                 'name' => $teamName,
-                'teamId' => $teamId, // <--- Link to Master Node
+                'teamId' => $teamId, 
                 'players' => $players
             ];
         }
 
-        // 3. Generate Bracket
+        // 6. Generate Bracket
         $matches = $this->generateBracket($teamNames, $participantCount, $tournamentId);
         $startDateTimestamp = \Carbon\Carbon::parse($request->start_date)->getTimestampMs();
 
