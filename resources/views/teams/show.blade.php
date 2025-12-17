@@ -88,13 +88,21 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($history as $record)
-                                    <tr>
+                                @forelse($history as $index => $record)
+                                    {{-- Main Row --}}
+                                    <tr class="cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" aria-expanded="false">
                                         <td class="ps-4 text-muted">
                                             {{ \Carbon\Carbon::createFromTimestampMs($record['date'])->format('M d, Y') }}
                                         </td>
-                                        <td class="fw-bold text-primary">
-                                            {{ $record['tournamentName'] }}
+                                        <td>
+                                            <div class="fw-bold text-primary">
+                                                {{ $record['tournamentName'] }}
+                                                @if(count($record['matches']) > 0)
+                                                    <span class="badge bg-light text-secondary border ms-2 small">
+                                                        <i class="fas fa-list-ul me-1"></i> {{ count($record['matches']) }} Games
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td>
                                             @if($record['result'] === 'Champion')
@@ -106,9 +114,57 @@
                                             @endif
                                         </td>
                                         <td class="text-end pe-4">
-                                            <a href="{{ route('tournaments.show', $record['id']) }}" class="btn btn-sm btn-outline-secondary">
-                                                View Bracket
-                                            </a>
+                                            <button class="btn btn-sm btn-light border">
+                                                <i class="fas fa-chevron-down"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    {{-- Expandable Details Row --}}
+                                    <tr>
+                                        <td colspan="4" class="p-0 border-0">
+                                            <div class="collapse bg-light" id="collapse{{ $index }}">
+                                                <div class="p-3 ps-5">
+                                                    @if(count($record['matches']) > 0)
+                                                        <h6 class="text-muted fw-bold small mb-2 text-uppercase">Match Performance</h6>
+                                                        <div class="list-group shadow-sm">
+                                                            @foreach($record['matches'] as $match)
+                                                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                                    <div>
+                                                                        <span class="badge bg-secondary me-2">Round {{ $match['round'] }}</span>
+                                                                        <span class="text-dark">vs <strong>{{ $match['opponent'] }}</strong></span>
+                                                                    </div>
+                                                                    
+                                                                    <div class="d-flex align-items-center">
+                                                                        <span class="fw-bold me-3 {{ $match['resultColor'] === 'success' ? 'text-success' : ($match['resultColor'] === 'danger' ? 'text-danger' : 'text-muted') }}">
+                                                                            {{ $match['result'] }} ({{ $match['score'] }})
+                                                                        </span>
+                                                                        
+                                                                        {{-- LINK TO GAME OVERVIEW --}}
+                                                                        @if($match['status'] === 'completed')
+                                                                            <a href="{{ route('game.overview', ['gameId' => $match['matchId']]) }}" 
+                                                                               class="btn btn-xs btn-outline-primary fw-bold"
+                                                                               title="View Game Stats">
+                                                                                <i class="fas fa-chart-bar me-1"></i> Stats
+                                                                            </a>
+                                                                        @else
+                                                                            <span class="badge bg-light text-muted border">No Stats</span>
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    @else
+                                                        <p class="text-muted small mb-0 fst-italic">No matches played yet.</p>
+                                                    @endif
+                                                    
+                                                    <div class="mt-3 text-end">
+                                                        <a href="{{ route('tournaments.show', $record['id']) }}" class="btn btn-sm btn-link text-decoration-none">
+                                                            View Full Bracket &rarr;
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty

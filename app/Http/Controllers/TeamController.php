@@ -38,46 +38,97 @@ class TeamController extends Controller
         $team = $this->database->getReference("teams/{$teamId}")->getValue();
         if (!$team) return back()->with('error', 'Team not found.');
 
-        // 2. Find Tournaments this team participated in
+        $teamName = $team['name']; // Vital for matching
+
+        // 2. Find Tournaments & Specific Matches
         $allTournaments = $this->database->getReference('tournaments')->getValue();
         $history = [];
         $stats = ['played' => 0, 'won' => 0];
 
         if ($allTournaments) {
             foreach ($allTournaments as $tId => $tData) {
-                // Check if this team is in the tournament's team list
-                // We check by ID first, or fallback to Name match
-                $inTournament = false;
                 
+                // A. Check if team participated (by Name or ID link)
+                $inTournament = false;
                 if (isset($tData['teams'])) {
                     foreach ($tData['teams'] as $tTeam) {
                         if ((isset($tTeam['teamId']) && $tTeam['teamId'] === $teamId) || 
-                            ($tTeam['name'] === $team['name'])) {
+                            ($tTeam['name'] === $teamName)) {
                             $inTournament = true;
                             break;
                         }
                     }
                 }
 
-                if ($inTournament) {
-                    $result = 'Participant';
-                    if (($tData['status'] ?? '') === 'completed') {
-                        if (($tData['winner'] ?? '') === $team['name']) {
-                            $result = 'Champion';
-                            $stats['won']++;
-                        } else {
-                            $result = 'Eliminated';
+                if (!$inTournament) continue;
+
+                // B. Find specific matches played by this team
+                $matchesPlayed = [];
+                if (isset($tData['matches'])) {
+                    foreach ($tData['matches'] as $mId => $match) {
+                        $home = $match['home'] ?? '';
+                        $away = $match['away'] ?? '';
+
+                        // If team played in this match
+                        if ($home === $teamName || $away === $teamName) {
+                            $isHome = ($home === $teamName);
+                            $opponent = $isHome ? $away : $home;
+                            
+                            // Determine Result
+                            $result = 'Scheduled';
+                            $score = 'vs';
+                            $resultColor = 'secondary';
+
+                            if (($match['status'] ?? '') === 'completed') {
+                                $myScore = $isHome ? ($match['scoreHome'] ?? 0) : ($match['scoreAway'] ?? 0);
+                                $oppScore = $isHome ? ($match['scoreAway'] ?? 0) : ($match['scoreHome'] ?? 0);
+                                
+                                $score = "{$myScore} - {$oppScore}";
+                                
+                                if (($match['winner'] ?? '') === $teamName) {
+                                    $result = 'WON';
+                                    $resultColor = 'success';
+                                } else {
+                                    $result = 'LOST';
+                                    $resultColor = 'danger';
+                                }
+                            }
+
+                            $matchesPlayed[] = [
+                                'matchId' => $mId, // Key link to Game Overview!
+                                'round' => $match['round'] ?? 1,
+                                'opponent' => $opponent ?: 'TBD',
+                                'result' => $result,
+                                'resultColor' => $resultColor,
+                                'score' => $score,
+                                'status' => $match['status'] ?? 'scheduled'
+                            ];
                         }
                     }
-
-                    $history[] = [
-                        'tournamentName' => $tData['name'],
-                        'date' => $tData['startDate'],
-                        'result' => $result,
-                        'id' => $tId
-                    ];
-                    $stats['played']++;
                 }
+
+                // Sort matches by round
+                usort($matchesPlayed, fn($a, $b) => $a['round'] <=> $b['round']);
+
+                // C. Determine Overall Tournament Result
+                $overallResult = 'Participant';
+                if (($tData['status'] ?? '') === 'completed') {
+                    if (($tData['winner'] ?? '') === $teamName) {
+                        $overallResult = 'Champion';
+                        $stats['won']++;
+                    } else {
+                        $overallResult = 'Eliminated';
+                    }
+                }
+
+                $history[] = [
+                    'id' => $tId,
+                    'tournamentName' => $tData['name'],
+                    'date' => $tData['startDate'],
+                    'result' => $overallResult,
+                    'matches' => $matchesPlayed // Pass the match list to view
+                ];
+                $stats['played']++;
             }
         }
 
