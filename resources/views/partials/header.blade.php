@@ -131,10 +131,9 @@
                                     <li class="rd-dropdown-item">
                                         <a class="rd-dropdown-link" href="{{ route('teams.index') }}">Team List</a>
                                     </li>
-                                    <li class="rd-dropdown-item">
-                                        {{-- TODO: Change 'teams.my_teams' to your actual route name for user's teams --}}
+                                    {{-- <li class="rd-dropdown-item">
                                         <a class="rd-dropdown-link" href="">My Teams</a>
-                                    </li>
+                                    </li> --}}
                                 </ul>
                             </li>
                         </ul>
