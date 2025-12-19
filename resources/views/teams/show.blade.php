@@ -26,7 +26,7 @@
                     </div>
                     
                     <div class="row align-items-center position-relative z-1">
-                        <div class="col-md-8">
+                        <div class="col-lg-6">
                             <div class="d-flex align-items-center mb-3">
                                 <a href="{{ route('teams.index') }}" class="btn btn-sm btn-light bg-opacity-25 text-black border-0 me-3">
                                     <i class="fas fa-arrow-left"></i> Back
@@ -36,14 +36,32 @@
                             <h1 class="display-4 fw-bold mb-2">{{ $team['name'] }}</h1>
                             <p class="lead opacity-75 mb-0">Team History & Performance Log</p>
                         </div>
-                        <div class="col-md-4 text-md-end mt-4 mt-md-0">
-                            <div class="d-inline-block text-center bg-white bg-opacity-10 rounded p-3 me-2">
-                                <div class="h2 fw-bold mb-0" style="color: black">{{ $stats['played'] }}</div>
-                                <div class="small text-uppercase opacity-75" style="color: black">Tournaments</div>
-                            </div>
-                            <div class="d-inline-block text-center bg-white bg-opacity-10 rounded p-3">
-                                <div class="h2 fw-bold mb-0" style="color: black">{{ $stats['won'] }}</div>
-                                <div class="small text-uppercase opacity-75" style="color: black">Championships</div>
+                        
+                        {{-- Stats Column --}}
+                        <div class="col-lg-6 text-lg-end mt-4 mt-lg-0">
+                            <div class="d-flex justify-content-lg-end gap-2 flex-wrap">
+                                {{-- Tournaments --}}
+                                <div class="text-center bg-white bg-opacity-10 rounded p-3" style="min-width: 100px; color: black;">
+                                    <div class="h2 fw-bold mb-0">{{ $stats['tournaments_played'] }}</div>
+                                    <div class="small text-uppercase opacity-75" style="font-size: 0.7rem; color: black;">Tournaments</div>
+                                    <div class="small fw-bold text-warning">{{ $stats['tournaments_won'] }} Won</div>
+                                </div>
+
+                                {{-- Match Record --}}
+                                <div class="text-center bg-white bg-opacity-10 rounded p-3" style="min-width: 100px; color: black;">
+                                    <div class="h2 fw-bold mb-0">
+                                        {{ $stats['matches_won'] }}-{{ $stats['matches_played'] - $stats['matches_won'] }}
+                                    </div>
+                                    <div class="small text-uppercase opacity-75" style="font-size: 0.7rem;">Match Record</div>
+                                    <div class="small opacity-75">W - L</div>
+                                </div>
+
+                                {{-- Win Rate --}}
+                                <div class="text-center bg-white text-primary rounded p-3 shadow-sm" style="min-width: 100px;">
+                                    <div class="h2 fw-bold mb-0">{{ $stats['win_rate'] }}%</div>
+                                    <div class="small text-uppercase fw-bold opacity-75" style="font-size: 0.7rem;">Win Rate</div>
+                                    <div class="small text-muted">{{ $stats['matches_played'] }} Games</div>
+                                </div>
                             </div>
                         </div>
                     </div>

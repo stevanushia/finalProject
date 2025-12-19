@@ -40,10 +40,19 @@ class TeamController extends Controller
 
         $teamName = $team['name']; 
 
-        // 2. Find Tournaments & Specific Matches
+        // 2. Fetch Data
         $allTournaments = $this->database->getReference('tournaments')->getValue();
+        $allSessionKeys = $this->database->getReference('game_sessions')->shallow()->getValue(); 
+
         $history = [];
-        $stats = ['played' => 0, 'won' => 0];
+        // NEW: Initialize detailed stats
+        $stats = [
+            'tournaments_played' => 0,
+            'tournaments_won' => 0,
+            'matches_played' => 0, 
+            'matches_won' => 0,
+            'win_rate' => 0
+        ];
 
         if ($allTournaments) {
             foreach ($allTournaments as $tId => $tData) {
@@ -62,51 +71,51 @@ class TeamController extends Controller
 
                 if (!$inTournament) continue;
 
-                // Find specific matches
                 $matchesPlayed = [];
                 if (isset($tData['matches'])) {
                     foreach ($tData['matches'] as $mId => $match) {
                         $home = $match['home'] ?? '';
                         $away = $match['away'] ?? '';
 
-                        // If team played in this match (and opponent exists)
+                        // If team played in this match
                         if (($home === $teamName || $away === $teamName) && !empty($home) && !empty($away)) {
                             $isHome = ($home === $teamName);
                             $opponent = $isHome ? $away : $home;
                             
-                            // Get Scores (Live or Final)
                             $myScore = $isHome ? ($match['scoreHome'] ?? 0) : ($match['scoreAway'] ?? 0);
                             $oppScore = $isHome ? ($match['scoreAway'] ?? 0) : ($match['scoreHome'] ?? 0);
                             $scoreDisplay = "{$myScore} - {$oppScore}";
 
-                            // Determine Status & Result
                             $status = $match['status'] ?? 'scheduled';
                             $result = 'Scheduled';
                             $resultColor = 'secondary';
-                            $isPlayable = false; // Flag to show link
+                            
+                            $sessionExists = isset($allSessionKeys[$mId]);
+                            $isPlayable = false;
 
                             if ($status === 'completed') {
-                                // Game Over
-                                $isPlayable = true;
+                                // --- NEW: Increment Match Stats ---
+                                $stats['matches_played']++;
+                                
                                 if (($match['winner'] ?? '') === $teamName) {
                                     $result = 'WON';
                                     $resultColor = 'success';
+                                    $stats['matches_won']++; // Increment Wins
                                 } else {
                                     $result = 'LOST';
                                     $resultColor = 'danger';
                                 }
+                                
+                                if ($sessionExists) $isPlayable = true;
                             } else {
-                                // Game Not Finished
+                                // Handle Live/Scheduled logic (same as before)
                                 if ($myScore > 0 || $oppScore > 0) {
-                                    // If there's a score, it's LIVE
                                     $result = 'LIVE';
                                     $resultColor = 'warning text-dark';
-                                    $isPlayable = true;
+                                    if ($sessionExists) $isPlayable = true;
                                 } else {
-                                    // No score yet, just scheduled
                                     $result = 'VS';
-                                    // We still allow clicking "View" just in case the session exists but score is 0-0
-                                    $isPlayable = true; 
+                                    if ($sessionExists) $isPlayable = true;
                                 }
                             }
 
@@ -117,21 +126,22 @@ class TeamController extends Controller
                                 'result' => $result,
                                 'resultColor' => $resultColor,
                                 'score' => $scoreDisplay,
-                                'isPlayable' => $isPlayable // Helper for View
+                                'isPlayable' => $isPlayable,
+                                'status' => $status,
+                                'sessionExists' => $sessionExists
                             ];
                         }
                     }
                 }
 
-                // Sort matches by round
                 usort($matchesPlayed, fn($a, $b) => $a['round'] <=> $b['round']);
 
-                // Determine Overall Tournament Result
+                // Tournament Stats
                 $overallResult = 'Participant';
                 if (($tData['status'] ?? '') === 'completed') {
                     if (($tData['winner'] ?? '') === $teamName) {
                         $overallResult = 'Champion';
-                        $stats['won']++;
+                        $stats['tournaments_won']++;
                     } else {
                         $overallResult = 'Eliminated';
                     }
@@ -144,11 +154,15 @@ class TeamController extends Controller
                     'result' => $overallResult,
                     'matches' => $matchesPlayed 
                 ];
-                $stats['played']++;
+                $stats['tournaments_played']++;
             }
         }
 
-        // Sort history by date descending
+        // --- NEW: Calculate Win Rate ---
+        if ($stats['matches_played'] > 0) {
+            $stats['win_rate'] = round(($stats['matches_won'] / $stats['matches_played']) * 100, 1);
+        }
+
         usort($history, fn($a, $b) => $b['date'] <=> $a['date']);
 
         return view('teams.show', compact('team', 'history', 'stats'));
