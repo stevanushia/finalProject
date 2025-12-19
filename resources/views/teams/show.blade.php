@@ -2,6 +2,17 @@
 
 @section('title', $team['name'] . ' - History')
 
+@push('styles')
+<style>
+    .blink {
+        animation: blinker 1.5s linear infinite;
+    }
+    @keyframes blinker {
+        50% { opacity: 0; }
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container py-5">
     
@@ -136,19 +147,32 @@
                                                                     </div>
                                                                     
                                                                     <div class="d-flex align-items-center">
-                                                                        <span class="fw-bold me-3 {{ $match['resultColor'] === 'success' ? 'text-success' : ($match['resultColor'] === 'danger' ? 'text-danger' : 'text-muted') }}">
-                                                                            {{ $match['result'] }} ({{ $match['score'] }})
+                                                                        {{-- Score / Result Label --}}
+                                                                        <span class="fw-bold me-3 badge {{ $match['resultColor'] === 'warning text-dark' ? 'bg-warning text-dark' : ($match['resultColor'] === 'success' ? 'text-success bg-light' : ($match['resultColor'] === 'danger' ? 'text-danger bg-light' : 'text-muted bg-light')) }}">
+                                                                            @if($match['result'] === 'LIVE')
+                                                                                <i class="fas fa-circle text-danger fa-xs me-1 blink"></i> LIVE
+                                                                            @else
+                                                                                {{ $match['result'] }}
+                                                                            @endif
+                                                                            <span class="ms-1 text-dark">({{ $match['score'] }})</span>
                                                                         </span>
                                                                         
-                                                                        {{-- LINK TO GAME OVERVIEW --}}
-                                                                        @if($match['status'] === 'completed')
-                                                                            <a href="{{ route('game.overview', ['gameId' => $match['matchId']]) }}" 
-                                                                               class="btn btn-xs btn-outline-primary fw-bold"
-                                                                               title="View Game Stats">
-                                                                                <i class="fas fa-chart-bar me-1"></i> Stats
+                                                                        {{-- Action Button --}}
+                                                                        @if($match['isPlayable'])
+                                                                            {{-- FIX: Updated route name to match your web.php --}}
+                                                                            <a href="{{ route('game.overview.specific', ['gameId' => $match['matchId']]) }}" 
+                                                                            class="btn btn-sm {{ $match['result'] === 'LIVE' ? 'btn-danger text-white' : 'btn-outline-primary' }} fw-bold"
+                                                                            title="View Game Session">
+                                                                                @if($match['result'] === 'LIVE')
+                                                                                    <i class="fas fa-eye me-1"></i> Watch
+                                                                                @else
+                                                                                    <i class="fas fa-chart-bar me-1"></i> Stats
+                                                                                @endif
                                                                             </a>
                                                                         @else
-                                                                            <span class="badge bg-light text-muted border">No Stats</span>
+                                                                            <span class="badge bg-light text-muted border">
+                                                                                {{ $match['status'] === 'scheduled' ? 'TBD' : 'No Data' }}
+                                                                            </span>
                                                                         @endif
                                                                     </div>
                                                                 </div>

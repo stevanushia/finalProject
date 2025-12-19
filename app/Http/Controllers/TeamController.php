@@ -38,7 +38,7 @@ class TeamController extends Controller
         $team = $this->database->getReference("teams/{$teamId}")->getValue();
         if (!$team) return back()->with('error', 'Team not found.');
 
-        $teamName = $team['name']; // Vital for matching
+        $teamName = $team['name']; 
 
         // 2. Find Tournaments & Specific Matches
         $allTournaments = $this->database->getReference('tournaments')->getValue();
@@ -48,7 +48,7 @@ class TeamController extends Controller
         if ($allTournaments) {
             foreach ($allTournaments as $tId => $tData) {
                 
-                // A. Check if team participated (by Name or ID link)
+                // Check if team participated
                 $inTournament = false;
                 if (isset($tData['teams'])) {
                     foreach ($tData['teams'] as $tTeam) {
@@ -62,29 +62,32 @@ class TeamController extends Controller
 
                 if (!$inTournament) continue;
 
-                // B. Find specific matches played by this team
+                // Find specific matches
                 $matchesPlayed = [];
                 if (isset($tData['matches'])) {
                     foreach ($tData['matches'] as $mId => $match) {
                         $home = $match['home'] ?? '';
                         $away = $match['away'] ?? '';
 
-                        // If team played in this match
-                        if ($home === $teamName || $away === $teamName) {
+                        // If team played in this match (and opponent exists)
+                        if (($home === $teamName || $away === $teamName) && !empty($home) && !empty($away)) {
                             $isHome = ($home === $teamName);
                             $opponent = $isHome ? $away : $home;
                             
-                            // Determine Result
-                            $result = 'Scheduled';
-                            $score = 'vs';
-                            $resultColor = 'secondary';
+                            // Get Scores (Live or Final)
+                            $myScore = $isHome ? ($match['scoreHome'] ?? 0) : ($match['scoreAway'] ?? 0);
+                            $oppScore = $isHome ? ($match['scoreAway'] ?? 0) : ($match['scoreHome'] ?? 0);
+                            $scoreDisplay = "{$myScore} - {$oppScore}";
 
-                            if (($match['status'] ?? '') === 'completed') {
-                                $myScore = $isHome ? ($match['scoreHome'] ?? 0) : ($match['scoreAway'] ?? 0);
-                                $oppScore = $isHome ? ($match['scoreAway'] ?? 0) : ($match['scoreHome'] ?? 0);
-                                
-                                $score = "{$myScore} - {$oppScore}";
-                                
+                            // Determine Status & Result
+                            $status = $match['status'] ?? 'scheduled';
+                            $result = 'Scheduled';
+                            $resultColor = 'secondary';
+                            $isPlayable = false; // Flag to show link
+
+                            if ($status === 'completed') {
+                                // Game Over
+                                $isPlayable = true;
                                 if (($match['winner'] ?? '') === $teamName) {
                                     $result = 'WON';
                                     $resultColor = 'success';
@@ -92,16 +95,29 @@ class TeamController extends Controller
                                     $result = 'LOST';
                                     $resultColor = 'danger';
                                 }
+                            } else {
+                                // Game Not Finished
+                                if ($myScore > 0 || $oppScore > 0) {
+                                    // If there's a score, it's LIVE
+                                    $result = 'LIVE';
+                                    $resultColor = 'warning text-dark';
+                                    $isPlayable = true;
+                                } else {
+                                    // No score yet, just scheduled
+                                    $result = 'VS';
+                                    // We still allow clicking "View" just in case the session exists but score is 0-0
+                                    $isPlayable = true; 
+                                }
                             }
 
                             $matchesPlayed[] = [
-                                'matchId' => $mId, // Key link to Game Overview!
+                                'matchId' => $mId, 
                                 'round' => $match['round'] ?? 1,
-                                'opponent' => $opponent ?: 'TBD',
+                                'opponent' => $opponent,
                                 'result' => $result,
                                 'resultColor' => $resultColor,
-                                'score' => $score,
-                                'status' => $match['status'] ?? 'scheduled'
+                                'score' => $scoreDisplay,
+                                'isPlayable' => $isPlayable // Helper for View
                             ];
                         }
                     }
@@ -110,7 +126,7 @@ class TeamController extends Controller
                 // Sort matches by round
                 usort($matchesPlayed, fn($a, $b) => $a['round'] <=> $b['round']);
 
-                // C. Determine Overall Tournament Result
+                // Determine Overall Tournament Result
                 $overallResult = 'Participant';
                 if (($tData['status'] ?? '') === 'completed') {
                     if (($tData['winner'] ?? '') === $teamName) {
@@ -126,7 +142,7 @@ class TeamController extends Controller
                     'tournamentName' => $tData['name'],
                     'date' => $tData['startDate'],
                     'result' => $overallResult,
-                    'matches' => $matchesPlayed // Pass the match list to view
+                    'matches' => $matchesPlayed 
                 ];
                 $stats['played']++;
             }
